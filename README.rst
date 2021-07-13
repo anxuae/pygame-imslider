@@ -7,6 +7,24 @@
 
 Flexible images slider for Pygame engine.
 
+Run examples
+------------
+
+Several examples are provided with the **pygame_imslider** library.
+To run the examples, simply execute these commands in a terminal:
+
+.. code-block:: bash
+
+    python -m pygame_imslider.examples.simple
+
+Contributing
+------------
+
+If you develop you own renderer please share it ! I will keep a collection of
+rendering class in this repository. Don't hesitate to report bug, feedback,
+suggestion into the repository issues section.
+
+
 .. |PythonVersions| image:: https://img.shields.io/badge/python-3.6+-red.svg
    :target: https://www.python.org/downloads
    :alt: Python 3.6+

@@ -2,8 +2,8 @@
 
 
 class SliderRenderer(object):
-    """
-    A SliderRenderer is in charge of image slider rendering.
+
+    """A SliderRenderer is in charge of image slider rendering.
 
     It handles keyboard rendering properties such as color or padding,
     and provides several rendering methods.
