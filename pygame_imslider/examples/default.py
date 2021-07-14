@@ -7,12 +7,7 @@ import pygame
 import pygame_imslider as imslider
 
 
-def on_slide_event(index):
-    """ Print the current text. """
-    print('Current index:', index)
-
-
-def main(test=False):
+def main(test=False, images=[], parameters={}):
     """ Main program.
 
     :param test: Indicate function is being tested
@@ -22,10 +17,12 @@ def main(test=False):
 
     # Init pygame
     pygame.init()
-    screen = pygame.display.set_mode((500, 400))
+    screen = pygame.display.set_mode((800, 300))
+    screen.fill((178, 123, 200))
 
     # Create keyboard
-    slider = imslider.ImageSlider(screen.get_size())
+    slider = imslider.ImSlider(screen.get_size(), **parameters)
+    slider.load_images(images, True)
 
     clock = pygame.time.Clock()
 
@@ -52,4 +49,4 @@ def main(test=False):
 
 
 if __name__ == '__main__':
-    main()
+    main(False, ["a", "b", "c", "d"])

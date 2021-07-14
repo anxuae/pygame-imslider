@@ -8,18 +8,15 @@ class Background(pygame.sprite.DirtySprite):
     """Background of the image slider box.
     """
 
-    def __init__(self, size, renderer):
+    def __init__(self, renderer):
         """
-        :param size: size tuple (width, height) of the background
-        :type size: tuple
         :param renderer: render used to render the background
         :type renderer: :py:class:`SliderRenderer`
         """
         super(Background, self).__init__()
         self.renderer = renderer
-        self.image = pygame.Surface(size, pygame.SRCALPHA, 32)
-        self.rect = pygame.Rect((0, 0), size)
-
+        self.rect = pygame.Rect((0, 0), (10, 10))
+        self.image = pygame.Surface(self.rect.size, pygame.SRCALPHA, 32)
         self.renderer.draw_background(self.image)
 
     def set_position(self, x, y):
@@ -48,6 +45,7 @@ class Background(pygame.sprite.DirtySprite):
             self.renderer.draw_background(self.image)
             self.dirty = 1
 
+
 class Arrow(pygame.sprite.DirtySprite):
     """
     Arrow sprite.
@@ -69,7 +67,7 @@ class Arrow(pygame.sprite.DirtySprite):
         super(Arrow, self).__init__()
         self.renderer = renderer
         self.pressed = 0
-        self.arrow = pygame.image.load(arrow_path)
+        self.source = pygame.image.load(arrow_path)
         self.rect = pygame.Rect((0, 0), (10, 10))
         self.image = pygame.Surface(self.rect.size, pygame.SRCALPHA, 32)
 
@@ -96,7 +94,7 @@ class Arrow(pygame.sprite.DirtySprite):
         if self.rect.size != (width, height):
             self.rect.size = (width, height)
             self.image = pygame.Surface(self.rect.size, pygame.SRCALPHA, 32)
-            self.renderer.draw_arrow(self.image, self.arrow)
+            self.renderer.draw_arrow(self.image, self.source, self.pressed)
             self.dirty = 1
 
     def set_pressed(self, state):
@@ -107,8 +105,32 @@ class Arrow(pygame.sprite.DirtySprite):
         """
         if self.pressed != int(state):
             self.pressed = int(state)
-            self.renderer.draw_arrow(self.image, self.arrow)
+            self.renderer.draw_arrow(self.image, self.source, self.pressed)
             self.dirty = 1
+
+    def update(self, events):
+        """Pygame events processing method.
+
+        :param events: list of events to process.
+        :type events: list
+        """
+        for event in events:
+            if event.type == pygame.MOUSEBUTTONDOWN\
+                    and event.button in (1, 2, 3):
+                # Don't consider the mouse wheel (button 4 & 5):
+                if self.rect.collidepoint(event.pos):
+                    self.set_pressed(1)
+            elif event.type == pygame.MOUSEBUTTONUP\
+                    and event.button in (1, 2, 3):
+                # Don't consider the mouse wheel (button 4 & 5):
+                self.set_pressed(0)
+            elif event.type == pygame.FINGERDOWN:
+                display_size = pygame.display.get_surface().get_size()
+                finger_pos = (event.x * display_size[0], event.y * display_size[1])
+                if self.rect.collidepoint(finger_pos):
+                    self.set_pressed(1)
+            elif event.type == pygame.FINGERUP:
+                self.set_pressed(0)
 
 
 class Slide(pygame.sprite.DirtySprite):
@@ -134,6 +156,7 @@ class Slide(pygame.sprite.DirtySprite):
         super(Slide, self).__init__()
         self.renderer = renderer
         self.selected = 0
+        self.image_path = image_path
         if load:
             self.source = pygame.image.load(image_path)
         else:
@@ -164,5 +187,17 @@ class Slide(pygame.sprite.DirtySprite):
         if self.rect.size != (width, height):
             self.rect.size = (width, height)
             self.image = pygame.Surface(self.rect.size, pygame.SRCALPHA, 32)
-            self.renderer.draw_slide(self.image, self.selected)
+            self.renderer.draw_slide(self.image, self.source, self.selected)
+            self.dirty = 1
+
+    def set_selected(self, state):
+        """Set the slide selection state (1 for selected else 0)
+        and redraws it.
+
+        :param state: new key state
+        :type state: int
+        """
+        if self.selected != int(state):
+            self.selected = int(state)
+            self.renderer.draw_slide(self.image, self.source, self.selected)
             self.dirty = 1

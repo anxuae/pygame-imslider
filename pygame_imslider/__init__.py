@@ -2,7 +2,7 @@
 
 """Flexible images slider highly customizable for pygame."""
 
-from .slider import ImageSlider
+from .slider import ImSlider, STYPE_SLIDE, STYPE_LOOP, STYPE_FADE
 from .renderers import SliderRenderer
 
 __version__ = '0.0.1'

@@ -15,7 +15,11 @@ To run the examples, simply execute these commands in a terminal:
 
 .. code-block:: bash
 
-    python -m pygame_imslider.examples.simple
+    python -m pygame_imslider.examples.default
+    python -m pygame_imslider.examples.multiple
+    python -m pygame_imslider.examples.one_per_move
+    python -m pygame_imslider.examples.focus
+    python -m pygame_imslider.examples.fade
 
 Contributing
 ------------
