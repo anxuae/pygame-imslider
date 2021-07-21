@@ -11,11 +11,11 @@ JOYHAT_LEFT = (-1, 0)
 JOYHAT_RIGHT = (1, 0)
 JOYHAT_DOWN = (0, -1)
 
-# Regular slider.
+# Regular slider
 STYPE_SLIDE = 'slide'
-# Carousel slider. rewind is ignored
+# Carousel slider
 STYPE_LOOP = 'loop'
-#  Change slides with fade transition. per_page option is ignored.
+# Change slides with fade transition
 STYPE_FADE = 'fade'
 
 
@@ -29,6 +29,10 @@ class SlidesLayout(object):
         self.padding = padding
         self.selection = 0
         self.set_selection(pos=0)
+
+    @property
+    def last_idx(self):
+        return len(self.slides) - 1
 
     def set_position(self, x, y):
         """Set the background position.
@@ -77,10 +81,7 @@ class SlidesLayout(object):
             self.selection = pos
         if step is not None:
             self.selection += step
-            if self.selection < 0:
-                self.selection = len(self.slides) - 1 + self.selection
-            elif self.selection > len(self.slides) - 1:
-                self.selection = self.selection - (len(self.slides) - 1)
+            self.selection %= len(self.slides)
 
         if self.focus:
             self.slides[self.selection].set_selected(1)
@@ -114,8 +115,8 @@ class ImSlider(object):
                  rewind=False, speed=0.4, renderer=SliderRenderer.DEFAULT):
         self.size = size
         self.stype = stype
-        self.per_page = per_page
-        self.per_move = per_move
+        self._per_page = per_page
+        self._per_move = per_move
         self.focus = focus
         self.rewind = rewind
         self.speed = speed
@@ -137,8 +138,12 @@ class ImSlider(object):
         self.set_size(*self.size)
 
     @property
-    def step(self):
-        return self.per_move if self.per_move != 0 else self.per_page
+    def per_page(self):
+        return self._per_page if self.stype != STYPE_FADE else 1
+
+    @property
+    def per_move(self):
+        return self._per_move if self._per_move != 0 else self._per_page
 
     def load_images(self, images, lazy=False):
         """Load the images.
@@ -263,53 +268,48 @@ class ImSlider(object):
                     pass
 
     def update_arrows(self):
-        """Update arrows visibility.
+        """Update arrows visibility. The visibility is changed only if necessary
+        to avoid unwelcome surface update.
         """
         if self.stype != STYPE_LOOP and not self.rewind:
-            if self.slides_layout.selection == 0:
-                if self.arrows[0].visible == 1:
-                    self.arrows[0].visible = 0
-                if self.slides_layout.selection != len(self.slides_layout.slides) - 1 and self.arrows[1].visible == 0:
-                    self.arrows[1].visible = 1
+            if self.slides_layout.selection == 0 and self.arrows[0].visible == 1:
+                self.arrows[0].visible = 0
 
-            if self.slides_layout.selection == len(self.slides_layout.slides) - 1:
-                if self.arrows[1].visible == 1:
-                    self.arrows[1].visible = 0
-                if self.slides_layout.selection != 0 and self.arrows[1].visible == 0:
-                    self.arrows[0].visible = 1
+            if self.slides_layout.selection != 0 and self.arrows[0].visible == 0:
+                self.arrows[0].visible = 1
+
+            if self.slides_layout.selection == self.slides_layout.last_idx and self.arrows[1].visible == 1:
+                self.arrows[1].visible = 0
+
+            if self.slides_layout.selection != self.slides_layout.last_idx and self.arrows[1].visible == 0:
+                self.arrows[1].visible = 1
 
     def on_previous(self):
         """Go to previous slide.
         """
-        if self.stype == STYPE_LOOP:
+        if self.stype == STYPE_LOOP or self.rewind:
             # Loop, don't check limites
-            self.slides_layout.set_selection(step=-self.step)
-        elif self.slides_layout.selection - self.step >= 0:
+            self.slides_layout.set_selection(step=-self.per_move)
+        elif self.slides_layout.selection - self.per_move >= 0:
             # Move to given slide
-            self.slides_layout.set_selection(step=-self.step)
+            self.slides_layout.set_selection(step=-self.per_move)
         elif self.slides_layout.selection != 0:
             # Go to the first slide
             self.slides_layout.set_selection(pos=0)
-        elif self.rewind:
-            # Go to the last slide
-            self.slides_layout.set_selection(pos=len(self.slides_layout.slides) - 1)
 
         self.update_arrows()
 
     def on_next(self):
         """Go to next slide.
         """
-        if self.stype == STYPE_LOOP:
+        if self.stype == STYPE_LOOP or self.rewind:
             # Loop, don't check limites
-            self.slides_layout.set_selection(step=self.step)
-        elif self.slides_layout.selection + self.step < len(self.slides_layout.slides):
+            self.slides_layout.set_selection(step=self.per_move)
+        elif self.slides_layout.selection + self.per_move < len(self.slides_layout.slides):
             # Move to given slide
-            self.slides_layout.set_selection(step=self.step)
-        elif self.slides_layout.selection != len(self.slides_layout.slides) - 1:
+            self.slides_layout.set_selection(step=self.per_move)
+        elif self.slides_layout.selection != self.slides_layout.last_idx:
             # Go to the last slide
-            self.slides_layout.set_selection(pos=len(self.slides_layout.slides) - 1)
-        elif self.rewind:
-            # Go to the first slide
-            self.slides_layout.set_selection(pos=0)
+            self.slides_layout.set_selection(pos=self.slides_layout.last_idx)
 
         self.update_arrows()

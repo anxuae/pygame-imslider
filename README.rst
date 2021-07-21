@@ -1,11 +1,13 @@
-
-.. image:: https://raw.githubusercontent.com/anxuae/pygame-imslider/master/docs/pygame-imslider.png
-   :align: center
-   :alt: pygame-imslider
+pygame-imslider
+---------------
 
 |PythonVersions| |PypiPackage| |Downloads|
 
 Flexible images slider for Pygame engine.
+
+.. image:: https://raw.githubusercontent.com/anxuae/pygame-imslider/master/docs/pygame-imslider.png
+   :align: center
+   :alt: pygame-imslider
 
 Run examples
 ------------

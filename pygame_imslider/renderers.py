@@ -139,7 +139,7 @@ class SliderRenderer(object):
         fit_to_rect.center = surface.get_rect().center
         scaled = pygame.transform.smoothscale(arrow, fit_to_rect.size)
         if self.background_color is None:
-            surface.fill((255,255,255, 0))
+            surface.fill((255, 255, 255, 0))
         else:
             surface.fill(self.background_color)
         surface.blit(scaled, scaled.get_rect(center=surface.get_rect().center))
@@ -154,6 +154,7 @@ class SliderRenderer(object):
         :param selected: the slide is selected/focused
         :type selected: bool
         """
+        surface.fill((255, 255, 255, 0))  # Clear the current slide
         if selected:
             draw_round_rect(surface, self.selection_color, surface.get_rect(), 0.2)
         else:
@@ -173,7 +174,7 @@ class SliderRenderer(object):
 
 
 SliderRenderer.DEFAULT = SliderRenderer(
-    arrow_color = ((255, 255, 255), (54, 54, 54)),
+    arrow_color=((255, 255, 255), (54, 54, 54)),
     slide_color=(220, 234, 90),
     selection_color=(52, 196, 155),
     background_color=(212, 230, 49),
