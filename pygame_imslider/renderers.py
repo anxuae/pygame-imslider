@@ -175,9 +175,9 @@ class SliderRenderer(object):
 
 SliderRenderer.DEFAULT = SliderRenderer(
     arrow_color=((255, 255, 255), (54, 54, 54)),
-    slide_color=(220, 234, 90),
-    selection_color=(52, 196, 155),
-    background_color=(212, 230, 49),
+    slide_color=(242, 195, 195),
+    selection_color=(245, 95, 76),
+    background_color=(32, 135, 156),
 )
 
 SliderRenderer.DARK = SliderRenderer(

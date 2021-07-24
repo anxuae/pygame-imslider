@@ -19,20 +19,21 @@ STYPE_LOOP = 'loop'
 STYPE_FADE = 'fade'
 
 
-class SlidesLayout(object):
+class SlidesLayout(pygame.sprite.LayeredDirty):
 
-    def __init__(self, slides, per_page, focus, padding=10):
+    def __init__(self, per_page, focus, padding=10):
+        super(SlidesLayout, self).__init__()
         self.rect = pygame.Rect((0, 0), (10, 10))
-        self.slides = slides
+        self.clip = pygame.Rect((0, 0), (10, 10))
         self.per_page = per_page
         self.focus = focus
         self.padding = padding
         self.selection = 0
-        self.set_selection(pos=0)
+        self.set_clip(self.clip)
 
     @property
     def last_idx(self):
-        return len(self.slides) - 1
+        return len(self.sprites()) - 1
 
     def set_position(self, x, y):
         """Set the background position.
@@ -43,6 +44,7 @@ class SlidesLayout(object):
         :type y: int
         """
         self.rect.topleft = (x, y)
+        self.clip.topleft = (x + self.padding, y + self.padding)
 
     def set_size(self, width, height):
         """Set the background size.
@@ -53,16 +55,13 @@ class SlidesLayout(object):
         :type height: int
         """
         self.rect.size = (width, height)
+        self.clip.size = (width - 2 * self.padding, height - 2 * self.padding)
         slide_width = (width - ((1 + self.per_page) * self.padding)) // self.per_page
         slide_height = height - 2 * self.padding
         pos = self.padding
-        for slide in self.slides:
+        for slide in self.sprites():
             slide.set_position(self.rect.x + pos, self.rect.y + self.padding)
             slide.set_size(slide_width, slide_height)
-            if pos < self.rect.width - self.padding:
-                slide.visible = 1
-            else:
-                slide.visible = 0
             pos += slide_width + self.padding
 
     def set_selection(self, pos=None, step=None):
@@ -75,16 +74,23 @@ class SlidesLayout(object):
         """
         if pos is not None and step is not None:
             raise ValueError("Both position and step can not be specified.")
-        self.slides[self.selection].set_selected(0)
-        if pos is not None:
-            assert pos >= 0 and pos < len(self.slides)
-            self.selection = pos
-        if step is not None:
-            self.selection += step
-            self.selection %= len(self.slides)
 
-        if self.focus:
-            self.slides[self.selection].set_selected(1)
+        if self.sprites():
+            self.get_sprite(self.selection).set_selected(0)
+            if pos is not None:
+                assert pos >= 0 and pos < len(self.sprites())
+                self.selection = pos
+            if step is not None:
+                self.selection += step
+                self.selection %= len(self.sprites())
+
+            if self.focus:
+                self.get_sprite(self.selection).set_selected(1)
+
+    def move(self, step):
+        for slide in self.sprites():
+            pos = slide.rect.x + step * (slide.rect.width + self.padding)
+            slide.set_destination(pos, slide.rect.y, 5)
 
 
 class ImSlider(object):
@@ -113,6 +119,7 @@ class ImSlider(object):
 
     def __init__(self, size, stype=STYPE_SLIDE, per_page=1, per_move=0, focus=True,
                  rewind=False, speed=0.4, renderer=SliderRenderer.DEFAULT):
+        self.clock = pygame.time.Clock()
         self.size = size
         self.stype = stype
         self._per_page = per_page
@@ -121,7 +128,7 @@ class ImSlider(object):
         self.rewind = rewind
         self.speed = speed
         self.eraser = None
-        self.slides_layout = None
+        self.slides_layout = SlidesLayout(self.per_page, self.focus)
 
         self.renderer = renderer
         self.background = Background(self.renderer)
@@ -153,12 +160,12 @@ class ImSlider(object):
         :param lazy: load images only when needed
         :type lazy: bool
         """
-        self.sprites.remove_sprites_of_layer(2)
+        self.slides_layout.empty()
         for path in images:
-            self.sprites.add(Slide(path, self.renderer, not lazy), layer=2)
-        self.slides_layout = SlidesLayout(self.sprites.get_sprites_from_layer(2), self.per_page, self.focus)
+            self.slides_layout.add(Slide(path, self.renderer, not lazy))
         self.slides_layout.set_position(self.background.rect.x + self.arrows[0].rect.width, self.background.rect.y)
         self.slides_layout.set_size(self.size[0] - 2 * self.arrows[0].rect.width, self.size[1])
+        self.slides_layout.set_selection(pos=0)
         self.update_arrows()
 
     def set_eraser(self, surface):
@@ -166,6 +173,7 @@ class ImSlider(object):
         """
         self.eraser = surface.copy()
         self.sprites.clear(surface, self.eraser)
+        self.slides_layout.clear(surface, self.background.image)
 
     def set_size(self, width, height):
         """Resize the images slider according to the given size.
@@ -188,9 +196,8 @@ class ImSlider(object):
         self.arrows[1].set_position(self.background.rect.width - self.arrows[1].rect.width,
                                     self.background.rect.height // 2 - self.arrows[1].rect.height // 2)
 
-        if self.slides_layout:
-            self.slides_layout.set_position(self.background.rect.x + arrow_width, self.background.rect.y)
-            self.slides_layout.set_size(self.size[0] - 2 * arrow_width, self.size[1])
+        self.slides_layout.set_position(self.background.rect.x + arrow_width, self.background.rect.y)
+        self.slides_layout.set_size(self.size[0] - 2 * arrow_width, self.size[1])
 
         if self.sprites.get_clip() != self.background.rect:
             # Changing the clipping area will force update of all
@@ -227,9 +234,11 @@ class ImSlider(object):
             self.set_eraser(surface)
 
         rects = self.sprites.draw(surface)
+        rects += self.slides_layout.draw(surface)
 
         if force:
             self.sprites.repaint_rect(self.background.rect)
+            self.slides_layout.repaint_rect(self.background.rect)
         return rects
 
     def update(self, events):
@@ -238,7 +247,9 @@ class ImSlider(object):
         :param events: list of events to process.
         :type events: list
         """
+        dt = self.clock.tick() / 1000  # Amount of seconds between each loop.
         self.sprites.update(events)
+        self.slides_layout.update(events, dt)
 
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN\
@@ -246,26 +257,22 @@ class ImSlider(object):
                 # Don't consider the mouse wheel (button 4 & 5)
                 if self.arrows[0].rect.collidepoint(event.pos):
                     self.on_previous()
-
                 elif self.arrows[1].rect.collidepoint(event.pos):
                     self.on_next()
 
             elif event.type == pygame.FINGERDOWN:
                 display_size = pygame.display.get_surface().get_size()
                 finger_pos = (event.x * display_size[0], event.y * display_size[1])
-
-                # Check swipe
-                pass
+                if self.arrows[0].rect.collidepoint(finger_pos):
+                    self.on_previous()
+                elif self.arrows[1].rect.collidepoint(finger_pos):
+                    self.on_next()
 
             elif event.type == pygame.JOYHATMOTION:
                 if event.value == JOYHAT_LEFT:
-                    pass
-                elif event.value == JOYHAT_UP:
-                    pass
+                    self.on_previous()
                 elif event.value == JOYHAT_RIGHT:
-                    pass
-                elif event.value == JOYHAT_DOWN:
-                    pass
+                    self.on_next()
 
     def update_arrows(self):
         """Update arrows visibility. The visibility is changed only if necessary
@@ -290,9 +297,11 @@ class ImSlider(object):
         if self.stype == STYPE_LOOP or self.rewind:
             # Loop, don't check limites
             self.slides_layout.set_selection(step=-self.per_move)
+            self.slides_layout.move(self.per_move)
         elif self.slides_layout.selection - self.per_move >= 0:
             # Move to given slide
             self.slides_layout.set_selection(step=-self.per_move)
+            self.slides_layout.move(self.per_move)
         elif self.slides_layout.selection != 0:
             # Go to the first slide
             self.slides_layout.set_selection(pos=0)
@@ -305,9 +314,11 @@ class ImSlider(object):
         if self.stype == STYPE_LOOP or self.rewind:
             # Loop, don't check limites
             self.slides_layout.set_selection(step=self.per_move)
-        elif self.slides_layout.selection + self.per_move < len(self.slides_layout.slides):
+            self.slides_layout.move(-self.per_move)
+        elif self.slides_layout.selection + self.per_move < len(self.slides_layout):
             # Move to given slide
             self.slides_layout.set_selection(step=self.per_move)
+            self.slides_layout.move(-self.per_move)
         elif self.slides_layout.selection != self.slides_layout.last_idx:
             # Go to the last slide
             self.slides_layout.set_selection(pos=self.slides_layout.last_idx)

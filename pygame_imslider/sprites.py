@@ -164,6 +164,10 @@ class Slide(pygame.sprite.DirtySprite):
         self.rect = pygame.Rect((0, 0), (10, 10))
         self.image = pygame.Surface(self.rect.size, pygame.SRCALPHA, 32)
 
+        self.velocity = pygame.math.Vector2(0, 0)
+        self.destination = pygame.math.Vector2(0, 0)
+        self._time = 0
+
     def set_position(self, x, y):
         """Set the slide position.
 
@@ -174,6 +178,8 @@ class Slide(pygame.sprite.DirtySprite):
         """
         if self.rect.topleft != (x, y):
             self.rect.topleft = (x, y)
+            self.destination.xy = (x, y)
+            self._time = 0
             self.dirty = 1
 
     def set_size(self, width, height):
@@ -201,3 +207,44 @@ class Slide(pygame.sprite.DirtySprite):
             self.selected = int(state)
             self.renderer.draw_slide(self.image, self.source, self.selected)
             self.dirty = 1
+
+    def set_destination(self, x, y, speed):
+        """Set slide destination and speed of annimation.
+
+        :param x: X coordinate to move to
+        :type x: int
+        :param y: Y coordinate to move to
+        :type y: int
+        :param speed: animation duration in second
+        :type speed: int
+        """
+        self._time = 0
+        self.destination.xy = (x, y)
+        self.velocity.xy = (x - self.rect.x, y - self.rect.y)
+        self.velocity = self.velocity / speed
+
+    def is_moving(self):
+        """Return True if the slide is moving.
+        """
+        return self.destination.xy != self.rect.topleft
+
+    def update(self, events, dt):
+        """Pygame events processing method.
+
+        :param events: list of events to process.
+        :type events: list
+        :param dt: elapsed time since last call
+        :type dt: int
+        """
+        if not self.is_moving():
+            return
+
+        self._time += dt
+        self.rect.move_ip(*self.velocity * self._time)
+        if (self.velocity.x > 0 and self.rect.x > self.destination.x)\
+                or (self.velocity.x < 0 and self.rect.x < self.destination.x):
+            self.rect.x = self.destination.x
+        if (self.velocity.y > 0 and self.rect.y > self.destination.y)\
+                or (self.velocity.y < 0 and self.rect.y < self.destination.y):
+            self.rect.y = self.destination.y
+        self.dirty = 1
