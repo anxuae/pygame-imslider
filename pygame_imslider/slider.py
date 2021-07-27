@@ -87,10 +87,56 @@ class SlidesLayout(pygame.sprite.LayeredDirty):
             if self.focus:
                 self.get_sprite(self.selection).set_selected(1)
 
-    def move(self, step):
+    def is_moving(self):
+        for slide in self.sprites():
+            if slide.is_moving():
+                return True
+        return False
+
+    def get_visibles(self):
+        return [elem for elem in enumerate(self.sprites()) if self.clip.colliderect(elem[1].rect)]
+
+    def got_to_selection_forward(self, center=False):
+        visibles = self.get_visibles()
+        if center:
+            current = visibles[len(visibles) // 2][0]
+        else:
+            current = visibles[0][0]
+
+        step = current - self.selection
+        if step < 0:
+            # Ensure to not go after last index
+            step = max(step, visibles[-1][0] - self.last_idx)
+
+        if step > 0:
+            # Back to begining
+            step = min(step, len(self.sprites()) - len(visibles))
+
         for slide in self.sprites():
             pos = slide.rect.x + step * (slide.rect.width + self.padding)
             slide.set_destination(pos, slide.rect.y, 5)
+
+    def got_to_selection_backward(self, center=False):
+        visibles = self.get_visibles()
+        if center:
+            current = visibles[len(visibles) // 2][0]
+        else:
+            current = visibles[0][0]
+
+        step = current - self.selection
+        if step > 0:
+            # Ensure to not go after first index
+            step = min(step, visibles[0][0])
+
+        step = max(current - self.selection, visibles[-1][0] - self.last_idx)
+        for slide in self.sprites():
+            pos = slide.rect.x + step * (slide.rect.width + self.padding)
+            slide.set_destination(pos, slide.rect.y, 5)
+
+
+class SlidesLayoutLoop(SlidesLayout):
+
+    pass
 
 
 class ImSlider(object):
@@ -128,7 +174,10 @@ class ImSlider(object):
         self.rewind = rewind
         self.speed = speed
         self.eraser = None
-        self.slides_layout = SlidesLayout(self.per_page, self.focus)
+        if stype == STYPE_LOOP:
+            self.slides_layout = SlidesLayoutLoop(self.per_page, self.focus)
+        else:
+            self.slides_layout = SlidesLayout(self.per_page, self.focus)
 
         self.renderer = renderer
         self.background = Background(self.renderer)
@@ -251,34 +300,43 @@ class ImSlider(object):
         self.sprites.update(events)
         self.slides_layout.update(events, dt)
 
+        if self.slides_layout.is_moving():
+            return
+
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN\
                     and event.button in (1, 2, 3):
                 # Don't consider the mouse wheel (button 4 & 5)
-                if self.arrows[0].rect.collidepoint(event.pos):
+                if self.arrows[0].visible and self.arrows[0].rect.collidepoint(event.pos):
                     self.on_previous()
-                elif self.arrows[1].rect.collidepoint(event.pos):
+                elif self.arrows[1].visible and self.arrows[1].rect.collidepoint(event.pos):
                     self.on_next()
 
             elif event.type == pygame.FINGERDOWN:
                 display_size = pygame.display.get_surface().get_size()
                 finger_pos = (event.x * display_size[0], event.y * display_size[1])
-                if self.arrows[0].rect.collidepoint(finger_pos):
+                if self.arrows[0].visible and self.arrows[0].rect.collidepoint(finger_pos):
                     self.on_previous()
-                elif self.arrows[1].rect.collidepoint(finger_pos):
+                elif self.arrows[1].visible and self.arrows[1].rect.collidepoint(finger_pos):
                     self.on_next()
 
             elif event.type == pygame.JOYHATMOTION:
-                if event.value == JOYHAT_LEFT:
+                if self.arrows[0].visible and event.value == JOYHAT_LEFT:
                     self.on_previous()
-                elif event.value == JOYHAT_RIGHT:
+                elif self.arrows[1].visible and event.value == JOYHAT_RIGHT:
                     self.on_next()
 
     def update_arrows(self):
         """Update arrows visibility. The visibility is changed only if necessary
         to avoid unwelcome surface update.
         """
-        if self.stype != STYPE_LOOP and not self.rewind:
+        if len(self.slides_layout) == 1\
+                or (len(self.slides_layout) <= self.per_page and self.per_move >= self.per_page):
+            # Only one page
+            for i in range(2):
+                if self.arrows[i].visible == 1:
+                    self.arrows[i].visible = 0
+        elif self.stype != STYPE_LOOP and not self.rewind:
             if self.slides_layout.selection == 0 and self.arrows[0].visible == 1:
                 self.arrows[0].visible = 0
 
@@ -297,14 +355,15 @@ class ImSlider(object):
         if self.stype == STYPE_LOOP or self.rewind:
             # Loop, don't check limites
             self.slides_layout.set_selection(step=-self.per_move)
-            self.slides_layout.move(self.per_move)
+            self.slides_layout.got_to_selection_backward(self.focus == 'center')
         elif self.slides_layout.selection - self.per_move >= 0:
             # Move to given slide
             self.slides_layout.set_selection(step=-self.per_move)
-            self.slides_layout.move(self.per_move)
+            self.slides_layout.got_to_selection_backward(self.focus == 'center')
         elif self.slides_layout.selection != 0:
             # Go to the first slide
             self.slides_layout.set_selection(pos=0)
+            self.slides_layout.got_to_selection_backward(self.focus == 'center')
 
         self.update_arrows()
 
@@ -314,13 +373,14 @@ class ImSlider(object):
         if self.stype == STYPE_LOOP or self.rewind:
             # Loop, don't check limites
             self.slides_layout.set_selection(step=self.per_move)
-            self.slides_layout.move(-self.per_move)
+            self.slides_layout.got_to_selection_forward(self.focus == 'center')
         elif self.slides_layout.selection + self.per_move < len(self.slides_layout):
             # Move to given slide
             self.slides_layout.set_selection(step=self.per_move)
-            self.slides_layout.move(-self.per_move)
+            self.slides_layout.got_to_selection_forward(self.focus == 'center')
         elif self.slides_layout.selection != self.slides_layout.last_idx:
             # Go to the last slide
             self.slides_layout.set_selection(pos=self.slides_layout.last_idx)
+            self.slides_layout.got_to_selection_forward(self.focus == 'center')
 
         self.update_arrows()

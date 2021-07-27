@@ -114,6 +114,9 @@ class Arrow(pygame.sprite.DirtySprite):
         :param events: list of events to process.
         :type events: list
         """
+        if self.visible == 0:
+            return
+
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN\
                     and event.button in (1, 2, 3):
