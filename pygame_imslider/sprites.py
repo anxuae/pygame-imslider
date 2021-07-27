@@ -67,6 +67,7 @@ class Arrow(pygame.sprite.DirtySprite):
         super(Arrow, self).__init__()
         self.renderer = renderer
         self.pressed = 0
+        self.pressed_time = 0
         self.source = pygame.image.load(arrow_path)
         self.rect = pygame.Rect((0, 0), (10, 10))
         self.image = pygame.Surface(self.rect.size, pygame.SRCALPHA, 32)
@@ -108,32 +109,36 @@ class Arrow(pygame.sprite.DirtySprite):
             self.renderer.draw_arrow(self.image, self.source, self.pressed)
             self.dirty = 1
 
-    def update(self, events):
+    def update(self, events, dt):
         """Pygame events processing method.
 
         :param events: list of events to process.
         :type events: list
+        :param dt: elapsed time since last call
+        :type dt: int
         """
-        if self.visible == 0:
-            return
+        if self.pressed:
+            self.pressed_time += dt
 
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN\
                     and event.button in (1, 2, 3):
                 # Don't consider the mouse wheel (button 4 & 5):
-                if self.rect.collidepoint(event.pos):
+                if self.rect.collidepoint(event.pos) and self.visible:
                     self.set_pressed(1)
             elif event.type == pygame.MOUSEBUTTONUP\
                     and event.button in (1, 2, 3):
                 # Don't consider the mouse wheel (button 4 & 5):
                 self.set_pressed(0)
+                self.pressed_time = 0
             elif event.type == pygame.FINGERDOWN:
                 display_size = pygame.display.get_surface().get_size()
                 finger_pos = (event.x * display_size[0], event.y * display_size[1])
-                if self.rect.collidepoint(finger_pos):
+                if self.rect.collidepoint(finger_pos) and self.visible:
                     self.set_pressed(1)
             elif event.type == pygame.FINGERUP:
                 self.set_pressed(0)
+                self.pressed_time = 0
 
 
 class Slide(pygame.sprite.DirtySprite):
@@ -161,15 +166,12 @@ class Slide(pygame.sprite.DirtySprite):
         self.selected = 0
         self.image_path = image_path
         if load:
-            self.source = pygame.image.load(image_path)
+            self.source = pygame.image.load(image_path).convert()
         else:
             self.source = None
         self.rect = pygame.Rect((0, 0), (10, 10))
         self.image = pygame.Surface(self.rect.size, pygame.SRCALPHA, 32)
-
-        self.velocity = pygame.math.Vector2(0, 0)
-        self.destination = pygame.math.Vector2(0, 0)
-        self._time = 0
+        self.animations = []
 
     def set_position(self, x, y):
         """Set the slide position.
@@ -181,8 +183,6 @@ class Slide(pygame.sprite.DirtySprite):
         """
         if self.rect.topleft != (x, y):
             self.rect.topleft = (x, y)
-            self.destination.xy = (x, y)
-            self._time = 0
             self.dirty = 1
 
     def set_size(self, width, height):
@@ -211,43 +211,26 @@ class Slide(pygame.sprite.DirtySprite):
             self.renderer.draw_slide(self.image, self.source, self.selected)
             self.dirty = 1
 
-    def set_destination(self, x, y, speed):
-        """Set slide destination and speed of annimation.
-
-        :param x: X coordinate to move to
-        :type x: int
-        :param y: Y coordinate to move to
-        :type y: int
-        :param speed: animation duration in second
-        :type speed: int
+    def add_animation(self, animation):
+        """Add a new animation. Animations are apply according to the add
+        order. When finished, animation is discarded.
         """
-        self._time = 0
-        self.destination.xy = (x, y)
-        self.velocity.xy = (x - self.rect.x, y - self.rect.y)
-        self.velocity = self.velocity / speed
+        self.animations.append(animation)
 
-    def is_moving(self):
-        """Return True if the slide is moving.
+    def is_animated(self):
+        """Return True if the slide is currently animated.
         """
-        return self.destination.xy != self.rect.topleft
+        return len(self.animations) > 0
 
     def update(self, events, dt):
-        """Pygame events processing method.
+        """Update slide according to current animations.
 
         :param events: list of events to process.
         :type events: list
         :param dt: elapsed time since last call
         :type dt: int
         """
-        if not self.is_moving():
-            return
-
-        self._time += dt
-        self.rect.move_ip(*self.velocity * self._time)
-        if (self.velocity.x > 0 and self.rect.x > self.destination.x)\
-                or (self.velocity.x < 0 and self.rect.x < self.destination.x):
-            self.rect.x = self.destination.x
-        if (self.velocity.y > 0 and self.rect.y > self.destination.y)\
-                or (self.velocity.y < 0 and self.rect.y < self.destination.y):
-            self.rect.y = self.destination.y
-        self.dirty = 1
+        for animation in self.animations[:]:
+            animation(self, dt)
+            if animation.finished:
+                self.animations.remove(animation)

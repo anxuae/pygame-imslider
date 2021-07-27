@@ -87,9 +87,9 @@ def draw_round_rect(surface, color, rect, radius=0.1, width=0):
     return surface.blit(shape, rect)
 
 
-class SliderRenderer(object):
+class ImSliderRenderer(object):
 
-    """A SliderRenderer is in charge of image slider rendering.
+    """ImSliderRenderer is in charge of image slider rendering.
 
     It handles keyboard rendering properties such as color or padding,
     and provides several rendering methods.
@@ -173,14 +173,14 @@ class SliderRenderer(object):
             surface.fill(self.background_color)
 
 
-SliderRenderer.DEFAULT = SliderRenderer(
+ImSliderRenderer.DEFAULT = ImSliderRenderer(
     arrow_color=((255, 255, 255), (54, 54, 54)),
     slide_color=(242, 195, 195),
     selection_color=(245, 95, 76),
     background_color=(32, 135, 156),
 )
 
-SliderRenderer.DARK = SliderRenderer(
+ImSliderRenderer.DARK = ImSliderRenderer(
     arrow_color=((182, 183, 184), (124, 183, 62)),
     slide_color=(255, 255, 255),
     selection_color=(124, 183, 62),
