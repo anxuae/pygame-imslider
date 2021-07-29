@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import pygame
-from .animations import TransposeAnimation, FadeAnimation
+import pygame_imslider.animations as anim
 
 
 class SlidesLayout(pygame.sprite.LayeredDirty):
@@ -17,7 +17,21 @@ class SlidesLayout(pygame.sprite.LayeredDirty):
 
     @property
     def last_idx(self):
+        """Return last index.
+        """
         return len(self.sprites()) - 1
+
+    def update_slide_sizes(self):
+        """Update slides size and position.
+        """
+        width, height = self.rect.size
+        slide_width = (width - ((1 + self.per_page) * self.padding)) // self.per_page
+        slide_height = height - 2 * self.padding
+        pos = self.padding
+        for slide in self.sprites():
+            slide.set_position(self.rect.x + pos, self.rect.y + self.padding)
+            slide.set_size(slide_width, slide_height)
+            pos += slide_width + self.padding
 
     def set_position(self, x, y):
         """Set the background position.
@@ -40,13 +54,7 @@ class SlidesLayout(pygame.sprite.LayeredDirty):
         """
         self.rect.size = (width, height)
         self.get_clip().size = (width - 2 * self.padding, height - 2 * self.padding)
-        slide_width = (width - ((1 + self.per_page) * self.padding)) // self.per_page
-        slide_height = height - 2 * self.padding
-        pos = self.padding
-        for slide in self.sprites():
-            slide.set_position(self.rect.x + pos, self.rect.y + self.padding)
-            slide.set_size(slide_width, slide_height)
-            pos += slide_width + self.padding
+        self.update_slide_sizes()
 
     def set_selection(self, pos=None, step=None):
         """Change selected slide to next one.
@@ -83,7 +91,7 @@ class SlidesLayout(pygame.sprite.LayeredDirty):
         """Return the list of visible slide indexes.
         """
         return [idx for idx, slide in enumerate(self.sprites())
-                if self.get_clip().colliderect(slide.rect)]
+                if self.get_clip().colliderect(slide.rect) and slide.visible]
 
     def got_to_selection_forward(self, duration, center=False):
         """Move forward all slides to ensure that selection is visible.
@@ -110,7 +118,7 @@ class SlidesLayout(pygame.sprite.LayeredDirty):
 
         for slide in self.sprites():
             pos = slide.rect.x + step * (slide.rect.width + self.padding)
-            slide.add_animation(TransposeAnimation(pos, slide.rect.y, duration))
+            slide.add_animation(anim.Transpose(pos, slide.rect.y, duration))
 
     def got_to_selection_backward(self, duration, center=False):
         """Move backward all slides to ensure that selection is visible.
@@ -137,7 +145,7 @@ class SlidesLayout(pygame.sprite.LayeredDirty):
 
         for slide in self.sprites():
             pos = slide.rect.x + step * (slide.rect.width + self.padding)
-            slide.add_animation(TransposeAnimation(pos, slide.rect.y, duration))
+            slide.add_animation(anim.Transpose(pos, slide.rect.y, duration))
 
 
 class SlidesLayoutLoop(SlidesLayout):
@@ -147,4 +155,46 @@ class SlidesLayoutLoop(SlidesLayout):
 
 class SlidesLayoutFade(SlidesLayout):
 
-    pass
+    def update_slide_sizes(self):
+        for slide in self.sprites():
+            width, height = self.rect.size
+            slide.set_position(self.rect.x + self.padding, self.rect.y + self.padding)
+            slide.set_size(width - 2 * self.padding, height - 2 * self.padding)
+            if slide == self.sprites()[0]:
+                slide.visible = 1
+            else:
+                slide.visible = 0
+
+    def got_to_selection_forward(self, duration, center=False):
+        current_idx = self.get_visibles()[0]
+        current = self.sprites()[current_idx]
+        if not current.visible:
+            current.visible = 1
+        selected = self.sprites()[self.selection]
+        if not selected.visible:
+            selected.visible = 1
+
+        if current == self.sprites()[-1]:
+            selected.set_alpha(255)
+            current.add_animation(anim.Fade(0, duration))
+        else:
+            current.add_animation(anim.Exit(duration))
+            selected.set_alpha(0)
+            selected.add_animation(anim.Fade(255, duration, False))
+
+    def got_to_selection_backward(self, duration, center=False):
+        current_idx = self.get_visibles()[0]
+        current = self.sprites()[current_idx]
+        if not current.visible:
+            current.visible = 1
+        selected = self.sprites()[self.selection]
+        if not selected.visible:
+            selected.visible = 1
+
+        if current == self.sprites()[0]:
+            current.add_animation(anim.Exit(duration))
+            selected.set_alpha(0)
+            selected.add_animation(anim.Fade(255, duration, False))
+        else:
+            selected.set_alpha(255)
+            current.add_animation(anim.Fade(0, duration))

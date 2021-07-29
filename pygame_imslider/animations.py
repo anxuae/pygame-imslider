@@ -27,7 +27,7 @@ class Animation(object):
         raise NotImplementedError
 
 
-class TransposeAnimation(Animation):
+class Transpose(Animation):
 
     """Transpose to the position.
 
@@ -40,21 +40,24 @@ class TransposeAnimation(Animation):
     """
 
     def __init__(self, x, y, duration):
-        super(TransposeAnimation, self).__init__(duration)
+        super(Transpose, self).__init__(duration)
         self.destination = pygame.math.Vector2(x, y)
         self.velocity = None
+        self.ini_position = None
 
     def _apply(self, slide):
         if self.duration <= 0:
             slide.set_position(*self.destination)
             self.finished = True
+            return
 
         # Initialize velocity according to distance between current position and
         # destination
         if not self.velocity:
+            self.ini_position = slide.rect.topleft
             self.velocity = (self.destination - slide.rect.topleft) / self.duration
 
-        new_pos = slide.rect.topleft + self.velocity * self.time
+        new_pos = self.ini_position + self.velocity * self.time
 
         # Ensure that destination is not overrun
         if (self.velocity.x > 0 and new_pos.x > self.destination.x)\
@@ -69,32 +72,39 @@ class TransposeAnimation(Animation):
             self.finished = True
 
 
-class FadeAnimation(Animation):
+class Fade(Animation):
 
-    """Change image alpha.
+    """Change image alpha from current value to expected one.
 
     :param to_alpha: alpha value between 0 (tranparent) -> 255 (opaque)
     :type to_alpha: int
     :param duration: animation duration in second (0 = instantaneous)
     :type duration: int
+    :param set_visibility: set visibility to False at the end of the animation
+    :type set_visibility: bool
     """
 
-    def __init__(self, to_alpha, duration):
-        super(FadeAnimation, self).__init__(duration)
+    def __init__(self, to_alpha, duration, set_visibility=True):
+        super(Fade, self).__init__(duration)
         assert to_alpha >= 0 and to_alpha <= 255
         self.to_alpha = to_alpha
+        self.set_visibility = set_visibility
         self.velocity = None
+        self.ini_alpha = None
 
     def _apply(self, slide):
         if self.duration <= 0:
-            slide.image.set_alpha(self.to_alpha)
-            slide.dirty = True
+            slide.set_alpha(self.to_alpha)
+            if self.set_visibility:
+                slide.visible = 0
             self.finished = True
+            return
 
         if not self.velocity:
+            self.ini_alpha = slide.image.get_alpha()
             self.velocity = (self.to_alpha - slide.image.get_alpha()) / self.duration
 
-        new_alpha = slide.image.get_alpha() + self.velocity * self.time
+        new_alpha = int(self.ini_alpha + self.velocity * self.time)
 
         # Ensure that max alpha is not overrun
         if new_alpha < 0:
@@ -102,7 +112,22 @@ class FadeAnimation(Animation):
         elif new_alpha > 255:
             new_alpha = 255
 
-        slide.image.set_alpha(new_alpha)
-        slide.dirty = True
-        if slide.new_alpha == self.to_alpha:
+        slide.set_alpha(new_alpha)
+        if new_alpha == self.to_alpha:
+            if self.set_visibility:
+                slide.visible = 0
+            self.finished = True
+
+
+class Exit(Animation):
+
+    """Change image visibility to 0.
+
+    :param duration: animation duration in second (0 = instantaneous)
+    :type duration: int
+    """
+
+    def _apply(self, slide):
+        if self.time >= self.duration:
+            slide.visible = 0
             self.finished = True

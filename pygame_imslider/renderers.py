@@ -159,6 +159,8 @@ class ImSliderRenderer(object):
             draw_round_rect(surface, self.selection_color, surface.get_rect(), 0.2)
         else:
             draw_round_rect(surface, self.slide_color, surface.get_rect(), 0.2)
+        scaled = pygame.transform.smoothscale(image, image.get_rect().fit(surface.get_rect()).size)
+        surface.blit(scaled, scaled.get_rect(center=surface.get_rect().center))
 
     def draw_background(self, surface):
         """Default drawing method for background.

@@ -168,7 +168,8 @@ class Slide(pygame.sprite.DirtySprite):
         if load:
             self.source = pygame.image.load(image_path).convert()
         else:
-            self.source = None
+            font = pygame.font.Font(pygame.font.match_font('arial'), 30)
+            self.source = font.render(image_path, True, (0, 200, 0))
         self.rect = pygame.Rect((0, 0), (10, 10))
         self.image = pygame.Surface(self.rect.size, pygame.SRCALPHA, 32)
         self.animations = []
@@ -209,6 +210,13 @@ class Slide(pygame.sprite.DirtySprite):
         if self.selected != int(state):
             self.selected = int(state)
             self.renderer.draw_slide(self.image, self.source, self.selected)
+            self.dirty = 1
+
+    def set_alpha(self, alpha):
+        """Set slide transparency.
+        """
+        if alpha != self.image.get_alpha():
+            self.image.set_alpha(alpha)
             self.dirty = 1
 
     def add_animation(self, animation):

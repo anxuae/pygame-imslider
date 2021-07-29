@@ -42,15 +42,19 @@ class ImSlider(object):
     :type rewind: bool
     :param speed: transition duration in seconds.
     :type speed: int
+    :param renderer: renderer to customize colors of the slider.
+    :type renderer: :py:class:`ImSliderRenderer`
+    :param callback: callback called each time the selection is changed.
+    :type callback: function
     """
 
     def __init__(self, size, stype=STYPE_SLIDE, per_page=1, per_move=0, focus=True,
-                 rewind=False, speed=2, renderer=ImSliderRenderer.DEFAULT):
+                 rewind=False, speed=0.5, renderer=ImSliderRenderer.DEFAULT, callback=None):
+        self._per_page = per_page
+        self._per_move = per_move
         self.clock = pygame.time.Clock()
         self.size = size
         self.stype = stype
-        self._per_page = per_page
-        self._per_move = per_move
         self.focus = focus
         self.rewind = rewind
         self.speed = speed
@@ -62,6 +66,7 @@ class ImSlider(object):
         else:
             self.slides_layout = SlidesLayout(self.per_page, self.focus)
 
+        self.callback = callback
         self.renderer = renderer
         self.background = Background(self.renderer)
 
@@ -259,6 +264,8 @@ class ImSlider(object):
             self.slides_layout.got_to_selection_backward(self.speed, self.focus == 'center')
 
         self.update_arrows()
+        if self.callback:
+            self.callback(self.slides_layout.selection)
 
     def on_next(self):
         """Go to next slide.
@@ -277,3 +284,5 @@ class ImSlider(object):
             self.slides_layout.got_to_selection_forward(self.speed, self.focus == 'center')
 
         self.update_arrows()
+        if self.callback:
+            self.callback(self.slides_layout.selection)
