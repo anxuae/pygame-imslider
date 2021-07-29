@@ -23,6 +23,7 @@ Basic usage
 in the following example :
 
 .. code-block:: python
+
     from pygame_imslider import *
 
     def consumer(index):
@@ -36,13 +37,13 @@ The slider has the following optional parameters:
 - **size**: size of the image slider surface
 - **stype**: determine a slider type: STYPE_SLIDE, STYPE_LOOP or STYPE_FADE
 - **per_page**: determine how many slides should be displayed per page. In
-                "fade" stype, this option is ignored.
+  "fade" stype, this option is ignored.
 - **per_move**: determine how many slides should be moved when a slider goes
-                to next or perv. In "fade" stype, this option is ignored.
+  to next or perv. In "fade" stype, this option is ignored.
 - **focus**: determine which slide should be focused if there are multiple
-             slides in a page. A string "center" is acceptable for centering slides.
+  slides in a page. A string "center" is acceptable for centering slides.
 - **rewind**: whether to rewind a slider before the first slide or after the
-              last one. In "loop" stype, this option is ignored.
+  last one. In "loop" stype, this option is ignored.
 - **speed**: transition duration in seconds.
 - **renderer**: a ImSliderRenderer to customize colors of the slider
 - **callback**: callback called each time the selection is changed.
@@ -66,6 +67,7 @@ In order to process those events, slider instance event handling method should b
 in the following example:
 
 .. code-block:: python
+
     while True:
 
         events = pygame.event.get()
@@ -87,6 +89,7 @@ The global performances can be improved avoiding to flip the entire display at e
 using the ``pygame.display.update()`` function.
 
 .. code-block:: python
+
    while True:
 
        # Draw the slider
