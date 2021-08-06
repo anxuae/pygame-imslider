@@ -34,7 +34,6 @@ in the following example :
 
 The slider has the following optional parameters:
 
-- **size**: size of the image slider surface
 - **stype**: determine a slider type: STYPE_SLIDE, STYPE_LOOP or STYPE_FADE
 - **per_page**: determine how many slides should be displayed per page. In
   "fade" stype, this option is ignored.

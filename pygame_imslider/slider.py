@@ -60,11 +60,11 @@ class ImSlider(object):
         self.speed = speed
         self.eraser = None
         if stype == STYPE_LOOP:
-            self.slides_layout = SlidesLayoutLoop(self.per_page, self.focus)
+            self.layout = SlidesLayoutLoop(self.per_page, self.focus)
         elif stype == STYPE_FADE:
-            self.slides_layout = SlidesLayoutFade(self.per_page, self.focus)
+            self.layout = SlidesLayoutFade(self.per_page, self.focus)
         else:
-            self.slides_layout = SlidesLayout(self.per_page, self.focus)
+            self.layout = SlidesLayout(self.per_page, self.focus)
 
         self.callback = callback
         self.renderer = renderer
@@ -98,12 +98,12 @@ class ImSlider(object):
         :param lazy: load images only when needed
         :type lazy: bool
         """
-        self.slides_layout.empty()
+        self.layout.empty()
         for path in images:
-            self.slides_layout.add(Slide(path, self.renderer, not lazy))
-        self.slides_layout.set_position(self.background.rect.x + self.arrows[0].rect.width, self.background.rect.y)
-        self.slides_layout.set_size(self.size[0] - 2 * self.arrows[0].rect.width, self.size[1])
-        self.slides_layout.set_selection(pos=0)
+            self.layout.add(Slide(path, self.renderer, not lazy))
+        self.layout.set_position(self.background.rect.x + self.arrows[0].rect.width, self.background.rect.y)
+        self.layout.set_size(self.size[0] - 2 * self.arrows[0].rect.width, self.size[1])
+        self.layout.set_selection(pos=0)
         self.update_arrows()
 
     def set_eraser(self, surface):
@@ -111,7 +111,7 @@ class ImSlider(object):
         """
         self.eraser = surface.copy()
         self.sprites.clear(surface, self.eraser)
-        self.slides_layout.clear(surface, self.background.image)
+        self.layout.clear(surface, self.background.image)
 
     def set_size(self, width, height):
         """Resize the images slider according to the given size.
@@ -134,8 +134,8 @@ class ImSlider(object):
         self.arrows[1].set_position(self.background.rect.width - self.arrows[1].rect.width,
                                     self.background.rect.height // 2 - self.arrows[1].rect.height // 2)
 
-        self.slides_layout.set_position(self.background.rect.x + arrow_width, self.background.rect.y)
-        self.slides_layout.set_size(self.size[0] - 2 * arrow_width, self.size[1])
+        self.layout.set_position(self.background.rect.x + arrow_width, self.background.rect.y)
+        self.layout.set_size(self.size[0] - 2 * arrow_width, self.size[1])
 
         if self.sprites.get_clip() != self.background.rect:
             # Changing the clipping area will force update of all
@@ -172,11 +172,11 @@ class ImSlider(object):
             self.set_eraser(surface)
 
         rects = self.sprites.draw(surface)
-        rects += self.slides_layout.draw(surface)
+        rects += self.layout.draw(surface)
 
         if force:
             self.sprites.repaint_rect(self.background.rect)
-            self.slides_layout.repaint_rect(self.background.rect)
+            self.layout.repaint_rect(self.background.rect)
         return rects
 
     def update(self, events):
@@ -187,9 +187,9 @@ class ImSlider(object):
         """
         dt = self.clock.tick() / 1000  # Amount of seconds between each loop.
         self.sprites.update(events, dt)
-        self.slides_layout.update(events, dt)
+        self.layout.update(events, dt)
 
-        if self.slides_layout.is_animated():
+        if self.layout.is_animated():
             return  # Let's finish the current animations
 
         if self.arrows[0].pressed_time > self.pressed_repeat_time:
@@ -228,23 +228,23 @@ class ImSlider(object):
         """Update arrows visibility. The visibility is changed only if necessary
         to avoid unwelcome surface update.
         """
-        if len(self.slides_layout) == 1\
-                or (len(self.slides_layout) <= self.per_page and self.per_move >= self.per_page):
+        if len(self.layout.slides) == 1\
+                or (len(self.layout.slides) <= self.per_page and self.per_move >= self.per_page):
             # Only one page
             for i in range(2):
                 if self.arrows[i].visible:
                     self.arrows[i].visible = 0
         elif self.stype != STYPE_LOOP and not self.rewind:
-            if self.slides_layout.selection == 0 and self.arrows[0].visible:
+            if self.layout.selection == 0 and self.arrows[0].visible:
                 self.arrows[0].visible = 0
 
-            if self.slides_layout.selection != 0 and not self.arrows[0].visible:
+            if self.layout.selection != 0 and not self.arrows[0].visible:
                 self.arrows[0].visible = 1
 
-            if self.slides_layout.selection == self.slides_layout.last_idx and self.arrows[1].visible:
+            if self.layout.selection == self.layout.last_idx and self.arrows[1].visible:
                 self.arrows[1].visible = 0
 
-            if self.slides_layout.selection != self.slides_layout.last_idx and not self.arrows[1].visible:
+            if self.layout.selection != self.layout.last_idx and not self.arrows[1].visible:
                 self.arrows[1].visible = 1
 
     def on_previous(self):
@@ -252,37 +252,37 @@ class ImSlider(object):
         """
         if self.stype == STYPE_LOOP or self.rewind:
             # Loop, don't check limites
-            self.slides_layout.set_selection(step=-self.per_move)
-            self.slides_layout.got_to_selection_backward(self.speed, self.focus == 'center')
-        elif self.slides_layout.selection - self.per_move >= 0:
+            self.layout.set_selection(step=-self.per_move)
+            self.layout.got_to_selection_backward(self.speed, self.focus == 'center')
+        elif self.layout.selection - self.per_move >= 0:
             # Move to given slide
-            self.slides_layout.set_selection(step=-self.per_move)
-            self.slides_layout.got_to_selection_backward(self.speed, self.focus == 'center')
-        elif self.slides_layout.selection != 0:
+            self.layout.set_selection(step=-self.per_move)
+            self.layout.got_to_selection_backward(self.speed, self.focus == 'center')
+        elif self.layout.selection != 0:
             # Go to the first slide
-            self.slides_layout.set_selection(pos=0)
-            self.slides_layout.got_to_selection_backward(self.speed, self.focus == 'center')
+            self.layout.set_selection(pos=0)
+            self.layout.got_to_selection_backward(self.speed, self.focus == 'center')
 
         self.update_arrows()
         if self.callback:
-            self.callback(self.slides_layout.selection)
+            self.callback(self.layout.selection)
 
     def on_next(self):
         """Go to next slide.
         """
         if self.stype == STYPE_LOOP or self.rewind:
             # Loop, don't check limites
-            self.slides_layout.set_selection(step=self.per_move)
-            self.slides_layout.got_to_selection_forward(self.speed, self.focus == 'center')
-        elif self.slides_layout.selection + self.per_move < len(self.slides_layout):
+            self.layout.set_selection(step=self.per_move)
+            self.layout.got_to_selection_forward(self.speed, self.focus == 'center')
+        elif self.layout.selection + self.per_move < len(self.layout.slides):
             # Move to given slide
-            self.slides_layout.set_selection(step=self.per_move)
-            self.slides_layout.got_to_selection_forward(self.speed, self.focus == 'center')
-        elif self.slides_layout.selection != self.slides_layout.last_idx:
+            self.layout.set_selection(step=self.per_move)
+            self.layout.got_to_selection_forward(self.speed, self.focus == 'center')
+        elif self.layout.selection != self.layout.last_idx:
             # Go to the last slide
-            self.slides_layout.set_selection(pos=self.slides_layout.last_idx)
-            self.slides_layout.got_to_selection_forward(self.speed, self.focus == 'center')
+            self.layout.set_selection(pos=self.layout.last_idx)
+            self.layout.got_to_selection_forward(self.speed, self.focus == 'center')
 
         self.update_arrows()
         if self.callback:
-            self.callback(self.slides_layout.selection)
+            self.callback(self.layout.selection)

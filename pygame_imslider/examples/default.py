@@ -7,6 +7,10 @@ import pygame
 import pygame_imslider as imslider
 
 
+def consumer(index):
+    print('Current index : %s' % index)
+
+
 def main(test=False, images=[], parameters={}):
     """ Main program.
 
@@ -21,7 +25,7 @@ def main(test=False, images=[], parameters={}):
     screen.fill((178, 123, 200))
 
     # Create keyboard
-    slider = imslider.ImSlider(screen.get_size(), **parameters)
+    slider = imslider.ImSlider(screen.get_size(), callback=consumer, **parameters)
     slider.load_images(images, True)
 
     clock = pygame.time.Clock()
