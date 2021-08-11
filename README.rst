@@ -102,6 +102,25 @@ using the ``pygame.display.update()`` function.
           clear/hide the slider when it is necessary and may be mandatory if the surface
           has changed.
 
+Getting/Setting data
+--------------------
+
+Several information can be retrieved from the keyboard:
+
+.. code-block:: python
+
+    slider = ImSlider(...)
+
+    # Get a pygame.Rect object in which the slider is included.
+    slider.get_rect()
+
+    # Get the current index.
+    slider.get_index()
+
+    # Set the current index.
+    slider.set_index(2)
+
+
 Run examples
 ------------
 
@@ -113,6 +132,7 @@ To run the examples, simply execute these commands in a terminal:
     python -m pygame_imslider.examples.default
     python -m pygame_imslider.examples.multiple
     python -m pygame_imslider.examples.one_per_move
+    python -m pygame_imslider.examples.small_loop
     python -m pygame_imslider.examples.focus
     python -m pygame_imslider.examples.fade
 

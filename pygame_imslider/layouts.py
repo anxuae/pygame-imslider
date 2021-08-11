@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 
+import itertools
 import pygame
 import pygame_imslider.animations as anim
 
 
 class SlidesLayout(pygame.sprite.LayeredDirty):
 
-    def __init__(self, per_page, focus, padding=10):
+    def __init__(self, per_page, focus, padding=20):
         super(SlidesLayout, self).__init__()
+        self.slides = []
         self.rect = pygame.Rect((0, 0), (10, 10))
         self.per_page = per_page
         self.focus = focus
@@ -16,16 +18,18 @@ class SlidesLayout(pygame.sprite.LayeredDirty):
         self.set_clip(pygame.Rect((0, 0), (10, 10)))
 
     @property
-    def slides(self):
-        """Return last index.
-        """
-        return self.get_sprites_from_layer(0)
-
-    @property
     def last_idx(self):
         """Return last index.
         """
         return len(self.slides) - 1
+
+    def add_slide(self, slide):
+        self.slides.append(slide)
+        self.add(slide)
+
+    def empty(self):
+        super(SlidesLayout, self).empty()
+        self.slides = []
 
     def update_slide_sizes(self):
         """Update slides size and position.
@@ -74,7 +78,7 @@ class SlidesLayout(pygame.sprite.LayeredDirty):
             raise ValueError("Both position and step can not be specified.")
 
         if self.slides:
-            self.get_sprite(self.selection).set_selected(0)
+            self.slides[self.selection].set_selected(0)
             if pos is not None:
                 assert pos >= 0 and pos < len(self.slides)
                 self.selection = pos
@@ -83,7 +87,7 @@ class SlidesLayout(pygame.sprite.LayeredDirty):
                 self.selection %= len(self.slides)
 
             if self.focus:
-                self.get_sprite(self.selection).set_selected(1)
+                self.slides[self.selection].set_selected(1)
 
     def is_animated(self):
         """Return True if only one slide is currently annimated.
@@ -93,10 +97,10 @@ class SlidesLayout(pygame.sprite.LayeredDirty):
                 return True
         return False
 
-    def get_visibles(self):
-        """Return the list of visible slide indexes.
+    def get_visible_slides(self):
+        """Return the list of visible slides.
         """
-        return [idx for idx, slide in enumerate(self.slides)
+        return [slide for slide in self.slides
                 if self.get_clip().colliderect(slide.rect) and slide.visible]
 
     def got_to_selection_forward(self, duration, center=False):
@@ -107,16 +111,16 @@ class SlidesLayout(pygame.sprite.LayeredDirty):
         :param center: center on surface the selected slide (when possible)
         :type center: bool
         """
-        visibles = self.get_visibles()
+        visibles = self.get_visible_slides()
         if center:
             current = visibles[len(visibles) // 2]
         else:
             current = visibles[0]
 
-        step = current - self.selection
+        step = self.slides.index(current) - self.selection
         if step < 0:
             # Ensure to not go after last index
-            step = max(step, visibles[-1] - self.last_idx)
+            step = max(step, self.slides.index(visibles[-1]) - self.last_idx)
 
         if step > 0:
             # Fast backward to begining
@@ -134,20 +138,20 @@ class SlidesLayout(pygame.sprite.LayeredDirty):
         :param center: center on surface the selected slide (when possible)
         :type center: bool
         """
-        visibles = self.get_visibles()
+        visibles = self.get_visible_slides()
         if center:
             current = visibles[len(visibles) // 2]
         else:
             current = visibles[0]
 
-        step = current - self.selection
+        step = self.slides.index(current) - self.selection
         if step > 0:
             # Ensure to not go after first index
-            step = min(step, visibles[0])
+            step = min(step, self.slides.index(visibles[0]))
 
         if step < 0:
             # Fast forward to the end
-            step = max(step, visibles[-1] - self.last_idx)
+            step = max(step, self.slides.index(visibles[-1]) - self.last_idx)
 
         for slide in self.slides:
             pos = slide.rect.x + step * (slide.rect.width + self.padding)
@@ -156,15 +160,105 @@ class SlidesLayout(pygame.sprite.LayeredDirty):
 
 class SlidesLayoutLoop(SlidesLayout):
 
+    def get_visible_slides(self):
+        """Return the list of visible slides and possible clones.
+        """
+        return [slide for slide in self.get_x_ordered_slides()
+                if self.get_clip().colliderect(slide.rect) and slide.visible]
+
+    def get_x_ordered_slides(self, reverse=False):
+        """Return the list of slides and possible clones ordered by their X position.
+        """
+        return sorted(self.sprites(), key=lambda sprite: sprite.rect.x, reverse=reverse)
+
     def got_to_selection_forward(self, duration, center=False):
-        if len(self.slides) >= 2 * self.per_page:
-            # Don't need to clone slides
-            pass
+        # Remove clones and replace it with hidden parent
+        for sprite in self.sprites():
+            if sprite.parent:
+                self.remove(sprite)
+                sprite.parent.set_position(*sprite.rect.topleft)
+
+        visibles = self.get_visible_slides()
+        if center:
+            current = visibles[len(visibles) // 2]
+        else:
+            current = visibles[0]
+
+        # Move all left hidden slides to the end
+        sprites = self.get_x_ordered_slides()
+        last_pos_x = sprites[-1].rect.right + self.padding
+        for slide in sprites[:sprites.index(visibles[0])]:
+            slide.set_position(last_pos_x, slide.rect.y)
+            last_pos_x = slide.rect.right + self.padding
+
+        sprites = self.get_x_ordered_slides()
+        step = sprites.index(current) - sprites.index(self.slides[self.selection])
+
+        # Clone slides to complete the sprites list
+        right_hidden = len(sprites[sprites.index(visibles[-1]) + 1:])
+        missing = self.per_page - len(visibles) + abs(step) - right_hidden
+        count = 0
+        last_pos_x = sprites[-1].rect.right + self.padding
+        for slide in itertools.cycle(self.get_x_ordered_slides()):
+            if count >= missing:
+                break
+            clone = slide.clone()
+            clone.set_position(last_pos_x, slide.rect.y)
+            self.add(clone)
+            count += 1
+            last_pos_x = clone.rect.right + self.padding
+
+        # Add slide animations
+        for slide in self.get_x_ordered_slides():
+            pos = slide.rect.x + step * (slide.rect.width + self.padding)
+            slide.add_animation(anim.Transpose(pos, slide.rect.y, duration))
 
     def got_to_selection_backward(self, duration, center=False):
-        if len(self.slides) >= 2 * self.per_page:
-            # Don't need to clone slides
-            pass
+        # Remove clones and replace it with hidden parent
+        for sprite in self.sprites():
+            if sprite.parent:
+                self.remove(sprite)
+                sprite.parent.set_position(*sprite.rect.topleft)
+
+        visibles = self.get_visible_slides()
+        if center:
+            current = visibles[len(visibles) // 2]
+        else:
+            current = visibles[0]
+
+        # Move all right hidden slides to the begining
+        sprites = self.get_x_ordered_slides()
+        first_pos_x = sprites[0].rect.left - self.padding
+        for slide in reversed(sprites[sprites.index(visibles[-1]) + 1:]):
+            slide.set_position(first_pos_x - slide.rect.width, slide.rect.y)
+            first_pos_x = slide.rect.left - self.padding
+
+        sprites = self.get_x_ordered_slides()
+        current_idx = sprites.index(current)
+        selected_idx = sprites.index(self.slides[self.selection])
+        if current_idx < selected_idx:
+            step = current_idx + len(sprites) - selected_idx
+        else:
+            step = current_idx - selected_idx
+
+        # Clone slides to complete the sprites list
+        left_hidden = len(sprites[:sprites.index(visibles[0])])
+        missing = abs(step) - left_hidden
+        count = 0
+        first_pos_x = sprites[0].rect.left - self.padding
+        for slide in itertools.cycle(self.get_x_ordered_slides(reverse=True)):
+            if count >= missing:
+                break
+            clone = slide.clone()
+            clone.set_position(first_pos_x - slide.rect.width, slide.rect.y)
+            self.add(clone)
+            count += 1
+            first_pos_x = clone.rect.left - self.padding
+
+        # Add slide animations
+        for slide in self.get_x_ordered_slides():
+            pos = slide.rect.x + step * (slide.rect.width + self.padding)
+            slide.add_animation(anim.Transpose(pos, slide.rect.y, duration))
 
 
 class SlidesLayoutFade(SlidesLayout):
@@ -180,8 +274,7 @@ class SlidesLayoutFade(SlidesLayout):
                 slide.visible = 0
 
     def got_to_selection_forward(self, duration, center=False):
-        current_idx = self.get_visibles()[0]
-        current = self.slides[current_idx]
+        current = self.get_visible_slides()[0]
         if not current.visible:
             current.visible = 1
         selected = self.slides[self.selection]
@@ -197,8 +290,7 @@ class SlidesLayoutFade(SlidesLayout):
             selected.add_animation(anim.Fade(255, duration, False))
 
     def got_to_selection_backward(self, duration, center=False):
-        current_idx = self.get_visibles()[0]
-        current = self.slides[current_idx]
+        current = self.get_visible_slides()[0]
         if not current.visible:
             current.visible = 1
         selected = self.slides[self.selection]

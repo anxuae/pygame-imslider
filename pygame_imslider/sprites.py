@@ -52,7 +52,7 @@ class Arrow(pygame.sprite.DirtySprite):
 
     Holds arrow information and its state, size / position.
 
-    pressed = 0
+    By default pressed = 0
         If set to 0, the arrow is released.
         If set to 1, the arrow is pressed.
     """
@@ -68,9 +68,9 @@ class Arrow(pygame.sprite.DirtySprite):
         self.renderer = renderer
         self.pressed = 0
         self.pressed_time = 0
-        self.source = pygame.image.load(arrow_path)
         self.rect = pygame.Rect((0, 0), (10, 10))
         self.image = pygame.Surface(self.rect.size, pygame.SRCALPHA, 32)
+        self.image_source = pygame.image.load(arrow_path)
 
     def set_position(self, x, y):
         """Set the arrow position.
@@ -95,7 +95,7 @@ class Arrow(pygame.sprite.DirtySprite):
         if self.rect.size != (width, height):
             self.rect.size = (width, height)
             self.image = pygame.Surface(self.rect.size, pygame.SRCALPHA, 32)
-            self.renderer.draw_arrow(self.image, self.source, self.pressed)
+            self.renderer.draw_arrow(self.image, self.image_source, self.pressed)
             self.dirty = 1
 
     def set_pressed(self, state):
@@ -106,7 +106,7 @@ class Arrow(pygame.sprite.DirtySprite):
         """
         if self.pressed != int(state):
             self.pressed = int(state)
-            self.renderer.draw_arrow(self.image, self.source, self.pressed)
+            self.renderer.draw_arrow(self.image, self.image_source, self.pressed)
             self.dirty = 1
 
     def update(self, events, dt):
@@ -141,18 +141,65 @@ class Arrow(pygame.sprite.DirtySprite):
                 self.pressed_time = 0
 
 
+class Dot(pygame.sprite.DirtySprite):
+
+    def __init__(self, renderer):
+        super(Dot, self).__init__()
+        self.renderer = renderer
+        self.selected = 0
+        self.rect = pygame.Rect((0, 0), (10, 10))
+        self.image = pygame.Surface(self.rect.size, pygame.SRCALPHA, 32)
+
+    def set_position(self, x, y):
+        """Set the dot position.
+
+        :param x: position x
+        :type x: int
+        :param y: position y
+        :type y: int
+        """
+        if self.rect.topleft != (x, y):
+            self.rect.topleft = (x, y)
+            self.dirty = 1
+
+    def set_size(self, width, height):
+        """Set the dot size.
+
+        :param width: arrow width
+        :type width: int
+        :param height: arrow height
+        :type height: int
+        """
+        if self.rect.size != (width, height):
+            self.rect.size = (width, height)
+            self.image = pygame.Surface(self.rect.size, pygame.SRCALPHA, 32)
+            self.renderer.draw_dot(self.image, self.selected)
+            self.dirty = 1
+
+    def set_selected(self, state):
+        """Set the dot selected state (1 for selected 0 for unselected)
+        and redraws it.
+
+        :param state: new dot state.
+        """
+        if self.selected != int(state):
+            self.selected = int(state)
+            self.renderer.draw_dot(self.image, self.selected)
+            self.dirty = 1
+
+
 class Slide(pygame.sprite.DirtySprite):
     """
     Slide sprite.
 
-    Holds arrow information and its state, size / position.
+    Holds slide information and its state, size / position.
 
-    selected = 0
-        If set to 0, the key is selectable but not selected.
+    By default selected = 0
+        If set to 0, the key is not selected.
         If set to 1, the key is selected.
     """
 
-    def __init__(self, image_path, renderer, load=True):
+    def __init__(self, image_path, renderer, load=True, parent=None):
         """
         :param image_path: path to the image displayed in the slide
         :type image_path: str
@@ -160,19 +207,65 @@ class Slide(pygame.sprite.DirtySprite):
         :type renderer: :py:class:`SliderRenderer`
         :param load: load image when initialize class
         :type load: bool
+        :param parent: parent of the clone
+        :type parent: :py:class:`Slide`
         """
         super(Slide, self).__init__()
-        self.renderer = renderer
-        self.selected = 0
-        self.image_path = image_path
-        if load:
-            self.source = pygame.image.load(image_path).convert()
-        else:
-            font = pygame.font.Font(pygame.font.match_font('arial'), 30)
-            self.source = font.render(image_path, True, (0, 200, 0))
+        self.parent = parent
+        if not parent:
+            self._renderer = renderer
+            self._selected = 0
+            self._image_path = image_path
+            if load:
+                self._image_source = pygame.image.load(image_path).convert()
+            else:
+                self._image_source = None
+            #     font = pygame.font.Font(pygame.font.match_font('arial'), 30)
+            #     self._image_source = font.render(image_path, True, (0, 200, 0))
+
+        # Attributes than can differe from parents
         self.rect = pygame.Rect((0, 0), (10, 10))
         self.image = pygame.Surface(self.rect.size, pygame.SRCALPHA, 32)
         self.animations = []
+
+    def __repr__(self):
+        return "Slide({}, clone={})".format(self.image_path, self.parent is not None)
+
+    @property
+    def renderer(self):
+        if self.parent:
+            return self.parent.renderer
+        return self._renderer
+
+    @property
+    def selected(self):
+        if self.parent:
+            return self.parent.selected
+        return self._selected
+
+    @property
+    def image_path(self):
+        if self.parent:
+            return self.parent.image_path
+        return self._image_path
+
+    @property
+    def image_source(self):
+        if self.parent:
+            return self.parent.image_source
+        return self._image_source
+
+    def clone(self):
+        """Return a clone of the slide. A clone has the same attributes than its parent
+        but can have different:
+         - size
+         - position
+         - animations
+        """
+        clone = Slide('', '', parent=self)
+        clone.set_position(*self.rect.topleft)
+        clone.set_size(*self.rect.size)
+        return clone
 
     def set_position(self, x, y):
         """Set the slide position.
@@ -197,7 +290,7 @@ class Slide(pygame.sprite.DirtySprite):
         if self.rect.size != (width, height):
             self.rect.size = (width, height)
             self.image = pygame.Surface(self.rect.size, pygame.SRCALPHA, 32)
-            self.renderer.draw_slide(self.image, self.source, self.selected)
+            self.renderer.draw_slide(self.image, self.image_source, self.selected)
             self.dirty = 1
 
     def set_selected(self, state):
@@ -207,9 +300,9 @@ class Slide(pygame.sprite.DirtySprite):
         :param state: new key state
         :type state: int
         """
-        if self.selected != int(state):
-            self.selected = int(state)
-            self.renderer.draw_slide(self.image, self.source, self.selected)
+        if self._selected != int(state):
+            self._selected = int(state)
+            self.renderer.draw_slide(self.image, self.image_source, self.selected)
             self.dirty = 1
 
     def set_alpha(self, alpha):

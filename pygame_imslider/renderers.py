@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import pygame
+from pygame import gfxdraw
 
 
 def colorize(image, color):
@@ -103,6 +104,7 @@ class ImSliderRenderer(object):
 
     def __init__(self,
                  arrow_color,
+                 dot_color,
                  slide_color,
                  selection_color,
                  background_color):
@@ -112,17 +114,19 @@ class ImSliderRenderer(object):
         The states are: (released, pressed)
 
         :param arrow_color: RGB tuple for arrow color (one tuple per state)
+        :param dot_color: RGB tuple for dot color (one tuple per state)
         :param slide_color: RGB tuple for sldie color
         :param selection_color: RGB tuple for selected image color
         :param background_color: RGB tuple for background color
         """
         self.arrow_color = arrow_color
+        self.dot_color = dot_color
         self.slide_color = slide_color
         self.selection_color = selection_color
         self.background_color = background_color
 
     def draw_arrow(self, surface, image, pressed):
-        """
+        """Draw an arrow.
 
         :param surface: surface background should be drawn in
         :type surface: :py:class:`pygame.Surface`
@@ -144,8 +148,25 @@ class ImSliderRenderer(object):
             surface.fill(self.background_color)
         surface.blit(scaled, scaled.get_rect(center=surface.get_rect().center))
 
-    def draw_slide(self, surface, image, selected):
+    def draw_dot(self, surface, selected):
+        """Draw a dot.
+
+        :param surface: surface background should be drawn in
+        :type surface: :py:class:`pygame.Surface`
+        :param selected: the slide is selected/focused
+        :type selected: bool
         """
+        rect = surface.get_rect()
+        if selected:
+            color = self.dot_color[1]
+        else:
+            color = self.dot_color[0]
+        # Because anti-aliased filled circle doesn't exist
+        gfxdraw.aacircle(surface, rect.centerx, rect.centery, int(rect.width * 0.9 // 2), color)
+        gfxdraw.filled_circle(surface, rect.centerx, rect.centery, int(rect.width * 0.9 // 2), color)
+
+    def draw_slide(self, surface, image, selected):
+        """Draw a slide.
 
         :param surface: surface background should be drawn in
         :type surface: :py:class:`pygame.Surface`
@@ -159,8 +180,8 @@ class ImSliderRenderer(object):
             draw_round_rect(surface, self.selection_color, surface.get_rect(), 0.2)
         else:
             draw_round_rect(surface, self.slide_color, surface.get_rect(), 0.2)
-        scaled = pygame.transform.smoothscale(image, image.get_rect().fit(surface.get_rect()).size)
-        surface.blit(scaled, scaled.get_rect(center=surface.get_rect().center))
+        # scaled = pygame.transform.smoothscale(image, image.get_rect().fit(surface.get_rect()).size)
+        # surface.blit(scaled, scaled.get_rect(center=surface.get_rect().center))
 
     def draw_background(self, surface):
         """Default drawing method for background.
@@ -177,6 +198,7 @@ class ImSliderRenderer(object):
 
 ImSliderRenderer.DEFAULT = ImSliderRenderer(
     arrow_color=((255, 255, 255), (54, 54, 54)),
+    dot_color=((54, 54, 54), (255, 255, 255)),
     slide_color=(242, 195, 195),
     selection_color=(245, 95, 76),
     background_color=(32, 135, 156),
@@ -184,6 +206,7 @@ ImSliderRenderer.DEFAULT = ImSliderRenderer(
 
 ImSliderRenderer.DARK = ImSliderRenderer(
     arrow_color=((182, 183, 184), (124, 183, 62)),
+    dot_color=((124, 183, 62), (182, 183, 184)),
     slide_color=(255, 255, 255),
     selection_color=(124, 183, 62),
     background_color=(0, 0, 0),

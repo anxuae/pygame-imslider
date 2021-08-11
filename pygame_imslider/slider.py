@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
+import math
 import os.path as osp
 import pygame
 from .layouts import SlidesLayout, SlidesLayoutLoop, SlidesLayoutFade
-from .sprites import Background, Arrow, Slide
+from .sprites import Background, Arrow, Slide, Dot
 from .renderers import ImSliderRenderer
 
 # Joystick controls
@@ -100,18 +101,52 @@ class ImSlider(object):
         """
         self.layout.empty()
         for path in images:
-            self.layout.add(Slide(path, self.renderer, not lazy))
+            self.layout.add_slide(Slide(path, self.renderer, not lazy))
         self.layout.set_position(self.background.rect.x + self.arrows[0].rect.width, self.background.rect.y)
         self.layout.set_size(self.size[0] - 2 * self.arrows[0].rect.width, self.size[1])
         self.layout.set_selection(pos=0)
+
+        self.sprites.remove_sprites_of_layer(2)
+        nbr_pages = int(math.ceil(len(self.layout.slides) / self.per_page))
+        x_margin = 5
+        x = self.background.rect.centerx - (nbr_pages * self.layout.padding + (nbr_pages - 1) * x_margin) // 2
+        y_margin = 2
+        y = self.background.rect.bottom - self.layout.padding + y_margin
+        side = self.layout.padding - 2 * y_margin
+        for i in range(nbr_pages):
+            dot = Dot(self.renderer)
+            dot.set_size(side, side)
+            dot.set_position(x, y)
+            self.sprites.add(dot, layer=2)
+            x += dot.rect.width + x_margin
+
         self.update_arrows()
+        self.update_dots()
 
     def set_eraser(self, surface):
-        """Setup the surface used to hide/clear the keyboard.
+        """Setup the surface used to hide/clear the slider.
         """
         self.eraser = surface.copy()
         self.sprites.clear(surface, self.eraser)
         self.layout.clear(surface, self.background.image)
+
+    def get_rect(self):
+        """Return slider rect."""
+        return self.background.rect
+
+    def get_index(self):
+        """Return the index of the currently selected image."""
+        return self.layout.selection
+
+    def set_index(self, index):
+        """Set the current index."""
+        assert 0 <= index < len(self.layout.slides)
+        current = self.layout.selection
+        self.layout.set_selection(pos=index)
+        if current < index:
+            self.layout.got_to_selection_forward(self.speed, self.focus == 'center')
+        else:
+            self.layout.got_to_selection_backward(self.speed, self.focus == 'center')
 
     def set_size(self, width, height):
         """Resize the images slider according to the given size.
@@ -155,7 +190,7 @@ class ImSlider(object):
         The `force` parameter shall be used if the surface has been redrawn:
         it reset the eraser and redraw all sprites.
 
-        :param surface: surface this keyboard will be displayed at
+        :param surface: surface the slider will be displayed at
         :param force: force the drawing of the entire surface (time consuming)
         :type force: bool
 
@@ -247,6 +282,18 @@ class ImSlider(object):
             if self.layout.selection != self.layout.last_idx and not self.arrows[1].visible:
                 self.arrows[1].visible = 1
 
+    def update_dots(self):
+        """Update pages indication.
+        """
+        current_page = self.layout.selection // self.per_page + 1
+        count = 0
+        for dot in self.sprites.get_sprites_from_layer(2):
+            if count < current_page:
+                dot.set_selected(1)
+            else:
+                dot.set_selected(0)
+            count += 1
+
     def on_previous(self):
         """Go to previous slide.
         """
@@ -264,6 +311,7 @@ class ImSlider(object):
             self.layout.got_to_selection_backward(self.speed, self.focus == 'center')
 
         self.update_arrows()
+        self.update_dots()
         if self.callback:
             self.callback(self.layout.selection)
 
@@ -284,5 +332,6 @@ class ImSlider(object):
             self.layout.got_to_selection_forward(self.speed, self.focus == 'center')
 
         self.update_arrows()
+        self.update_dots()
         if self.callback:
             self.callback(self.layout.selection)

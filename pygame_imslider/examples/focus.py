@@ -7,4 +7,4 @@ from .default import main
 
 if __name__ == '__main__':
     main(False, ["a", "b", "c", "d", "e", "f", "g", "h", "i"],
-         {'stype': imslider.STYPE_LOOP, 'per_page': 3, 'per_move': 1, 'focus': 'center'})
+         {'stype': imslider.STYPE_LOOP, 'per_page': 3, 'per_move': 2, 'focus': 'center'})
