@@ -7,7 +7,7 @@ import pygame_imslider.animations as anim
 
 class SlidesLayout(pygame.sprite.LayeredDirty):
 
-    def __init__(self, per_page, focus, padding=20):
+    def __init__(self, per_page, focus, padding=24):
         super(SlidesLayout, self).__init__()
         self.slides = []
         self.rect = pygame.Rect((0, 0), (10, 10))
@@ -192,7 +192,12 @@ class SlidesLayoutLoop(SlidesLayout):
             last_pos_x = slide.rect.right + self.padding
 
         sprites = self.get_x_ordered_slides()
-        step = sprites.index(current) - sprites.index(self.slides[self.selection])
+        current_idx = sprites.index(current)
+        selected_idx = sprites.index(self.slides[self.selection])
+        if current_idx <= selected_idx:
+            step = current_idx - selected_idx
+        else:
+            step = current_idx - len(sprites) + selected_idx
 
         # Clone slides to complete the sprites list
         right_hidden = len(sprites[sprites.index(visibles[-1]) + 1:])

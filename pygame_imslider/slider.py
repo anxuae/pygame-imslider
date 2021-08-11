@@ -7,6 +7,8 @@ from .layouts import SlidesLayout, SlidesLayoutLoop, SlidesLayoutFade
 from .sprites import Background, Arrow, Slide, Dot
 from .renderers import ImSliderRenderer
 
+HERE = osp.dirname(osp.abspath(__file__))
+
 # Joystick controls
 JOYHAT_UP = (0, 1)
 JOYHAT_LEFT = (-1, 0)
@@ -29,17 +31,17 @@ class ImSlider(object):
     :type size: tuple
     :param stype: determine a slider type
     :type stype: str
-    :param per_page: determine how many slides should be displayed per page. In
-                     "fade" stype, this option is ignored.
+    :param per_page: determine how many slides should be displayed per page. If
+                     stype=STYPE_FADE, this option is ignored.
     :type per_page: int
     :param per_move: determine how many slides should be moved when a slider goes
-                     to next or perv. In "fade" stype, this option is ignored.
+                     to next or perv. If stype=STYPE_FADE, this option is ignored.
     :type per_move: int
     :param focus: determine which slide should be focused if there are multiple
                   slides in a page. A string "center" is acceptable for centering slides.
     :type focus: bool or str
     :param rewind: whether to rewind a slider before the first slide or after the
-                   last one. In "loop" stype, this option is ignored.
+                   last one. If stype=STYPE_LOOP, this option is ignored.
     :type rewind: bool
     :param speed: transition duration in seconds.
     :type speed: int
@@ -50,7 +52,7 @@ class ImSlider(object):
     """
 
     def __init__(self, size, stype=STYPE_SLIDE, per_page=1, per_move=0, focus=True,
-                 rewind=False, speed=0.5, renderer=ImSliderRenderer.DEFAULT, callback=None):
+                 rewind=False, speed=0.4, renderer=ImSliderRenderer.DEFAULT, callback=None):
         self._per_page = per_page
         self._per_move = per_move
         self.clock = pygame.time.Clock()
@@ -71,9 +73,8 @@ class ImSlider(object):
         self.renderer = renderer
         self.background = Background(self.renderer)
 
-        here = osp.dirname(osp.abspath(__file__))
-        self.arrows = (Arrow(osp.join(here, "left.png"), self.renderer),
-                       Arrow(osp.join(here, "right.png"), self.renderer))
+        self.arrows = (Arrow(osp.join(HERE, "left.png"), self.renderer),
+                       Arrow(osp.join(HERE, "right.png"), self.renderer))
         self.pressed_repeat_time = 0.4
 
         self.sprites = pygame.sprite.LayeredDirty()
@@ -107,21 +108,10 @@ class ImSlider(object):
         self.layout.set_selection(pos=0)
 
         self.sprites.remove_sprites_of_layer(2)
-        nbr_pages = int(math.ceil(len(self.layout.slides) / self.per_page))
-        x_margin = 5
-        x = self.background.rect.centerx - (nbr_pages * self.layout.padding + (nbr_pages - 1) * x_margin) // 2
-        y_margin = 2
-        y = self.background.rect.bottom - self.layout.padding + y_margin
-        side = self.layout.padding - 2 * y_margin
-        for i in range(nbr_pages):
-            dot = Dot(self.renderer)
-            dot.set_size(side, side)
-            dot.set_position(x, y)
-            self.sprites.add(dot, layer=2)
-            x += dot.rect.width + x_margin
+        self.setup_pagination()
 
         self.update_arrows()
-        self.update_dots()
+        self.update_pages()
 
     def set_eraser(self, surface):
         """Setup the surface used to hide/clear the slider.
@@ -129,6 +119,42 @@ class ImSlider(object):
         self.eraser = surface.copy()
         self.sprites.clear(surface, self.eraser)
         self.layout.clear(surface, self.background.image)
+
+    def setup_pagination(self):
+        """Setup pagination indication (one dot per page).
+        """
+        nbr_pages = int(math.ceil(len(self.layout.slides) / self.per_page))
+        x_margin = 5
+        x = self.background.rect.centerx - (nbr_pages * self.layout.padding + (nbr_pages - 1) * x_margin) // 2
+        y_margin = 4
+        y = self.background.rect.bottom - self.layout.padding + y_margin
+        dot_radius = self.layout.padding - 2 * y_margin
+        dots = self.sprites.get_sprites_from_layer(2)
+
+        # Update size of existing dots
+        for dot in dots:
+            dot.set_size(dot_radius, dot_radius)
+            dot.set_position(x, y)
+            x += dot.rect.width + x_margin
+
+        # Add missing dots
+        for i in range(max(0, nbr_pages - len(dots))):
+            dot = Dot(osp.join(HERE, "dot.png"), self.renderer)
+            self.sprites.add(dot, layer=2)
+            dot.set_size(dot_radius, dot_radius)
+            dot.set_position(x, y)
+            x += dot.rect.width + x_margin
+
+    def get_page_at(self, position):
+        """Retrieve if any page-dot is located at the given position.
+
+        :param position: position to check key at.
+        :return: page index if any at the given position, None otherwise.
+        """
+        for sprite in self.sprites.get_sprites_at(position):
+            if isinstance(sprite, Dot):
+                return self.sprites.get_sprites_from_layer(2).index(sprite)
+        return None
 
     def get_rect(self):
         """Return slider rect."""
@@ -140,13 +166,17 @@ class ImSlider(object):
 
     def set_index(self, index):
         """Set the current index."""
-        assert 0 <= index < len(self.layout.slides)
+        assert 0 <= index < len(self.layout.slides), "Invalid index '{}'".format(index)
         current = self.layout.selection
         self.layout.set_selection(pos=index)
         if current < index:
             self.layout.got_to_selection_forward(self.speed, self.focus == 'center')
         else:
             self.layout.got_to_selection_backward(self.speed, self.focus == 'center')
+        self.update_arrows()
+        self.update_pages()
+        if self.callback:
+            self.callback(self.layout.selection)
 
     def set_size(self, width, height):
         """Resize the images slider according to the given size.
@@ -171,6 +201,8 @@ class ImSlider(object):
 
         self.layout.set_position(self.background.rect.x + arrow_width, self.background.rect.y)
         self.layout.set_size(self.size[0] - 2 * arrow_width, self.size[1])
+
+        self.setup_pagination()
 
         if self.sprites.get_clip() != self.background.rect:
             # Changing the clipping area will force update of all
@@ -245,6 +277,11 @@ class ImSlider(object):
                 elif self.arrows[1].visible and self.arrows[1].rect.collidepoint(event.pos):
                     self.on_next()
 
+                page = self.get_page_at(event.pos)
+                if page is not None:
+                    print(page)
+                    self.set_index(self.per_page * page)
+
             elif event.type == pygame.FINGERDOWN:
                 display_size = pygame.display.get_surface().get_size()
                 finger_pos = (event.x * display_size[0], event.y * display_size[1])
@@ -252,6 +289,10 @@ class ImSlider(object):
                     self.on_previous()
                 elif self.arrows[1].visible and self.arrows[1].rect.collidepoint(finger_pos):
                     self.on_next()
+
+                page = self.get_page_at(event.pos)
+                if page is not None:
+                    self.set_index(self.per_page * page)
 
             elif event.type == pygame.JOYHATMOTION:
                 if self.arrows[0].visible and event.value == JOYHAT_LEFT:
@@ -282,7 +323,7 @@ class ImSlider(object):
             if self.layout.selection != self.layout.last_idx and not self.arrows[1].visible:
                 self.arrows[1].visible = 1
 
-    def update_dots(self):
+    def update_pages(self):
         """Update pages indication.
         """
         current_page = self.layout.selection // self.per_page + 1
@@ -311,7 +352,7 @@ class ImSlider(object):
             self.layout.got_to_selection_backward(self.speed, self.focus == 'center')
 
         self.update_arrows()
-        self.update_dots()
+        self.update_pages()
         if self.callback:
             self.callback(self.layout.selection)
 
@@ -332,6 +373,6 @@ class ImSlider(object):
             self.layout.got_to_selection_forward(self.speed, self.focus == 'center')
 
         self.update_arrows()
-        self.update_dots()
+        self.update_pages()
         if self.callback:
             self.callback(self.layout.selection)

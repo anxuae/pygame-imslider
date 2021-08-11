@@ -143,12 +143,18 @@ class Arrow(pygame.sprite.DirtySprite):
 
 class Dot(pygame.sprite.DirtySprite):
 
-    def __init__(self, renderer):
+    image_source = None
+
+    def __init__(self, dot_path, renderer):
         super(Dot, self).__init__()
         self.renderer = renderer
+        self.pressed = 0
         self.selected = 0
         self.rect = pygame.Rect((0, 0), (10, 10))
         self.image = pygame.Surface(self.rect.size, pygame.SRCALPHA, 32)
+        if not Dot.image_source:
+            # Load image only one time to save memory
+            Dot.image_source = pygame.image.load(dot_path)
 
     def set_position(self, x, y):
         """Set the dot position.
@@ -173,7 +179,7 @@ class Dot(pygame.sprite.DirtySprite):
         if self.rect.size != (width, height):
             self.rect.size = (width, height)
             self.image = pygame.Surface(self.rect.size, pygame.SRCALPHA, 32)
-            self.renderer.draw_dot(self.image, self.selected)
+            self.renderer.draw_dot(self.image, self.image_source, self.selected, self.pressed)
             self.dirty = 1
 
     def set_selected(self, state):
@@ -184,8 +190,45 @@ class Dot(pygame.sprite.DirtySprite):
         """
         if self.selected != int(state):
             self.selected = int(state)
-            self.renderer.draw_dot(self.image, self.selected)
+            self.renderer.draw_dot(self.image, self.image_source, self.selected, self.pressed)
             self.dirty = 1
+
+    def set_pressed(self, state):
+        """Set the dot pressed state (1 for pressed, 0 for released)
+        and redraws it.
+
+        :param state: new arrow state.
+        """
+        if self.pressed != int(state):
+            self.pressed = int(state)
+            self.renderer.draw_dot(self.image, self.image_source, self.selected, self.pressed)
+            self.dirty = 1
+
+    def update(self, events, dt):
+        """Pygame events processing method.
+
+        :param events: list of events to process.
+        :type events: list
+        :param dt: elapsed time since last call
+        :type dt: int
+        """
+        for event in events:
+            if event.type == pygame.MOUSEBUTTONDOWN\
+                    and event.button in (1, 2, 3):
+                # Don't consider the mouse wheel (button 4 & 5):
+                if self.rect.collidepoint(event.pos) and self.visible:
+                    self.set_pressed(1)
+            elif event.type == pygame.MOUSEBUTTONUP\
+                    and event.button in (1, 2, 3):
+                # Don't consider the mouse wheel (button 4 & 5):
+                self.set_pressed(0)
+            elif event.type == pygame.FINGERDOWN:
+                display_size = pygame.display.get_surface().get_size()
+                finger_pos = (event.x * display_size[0], event.y * display_size[1])
+                if self.rect.collidepoint(finger_pos) and self.visible:
+                    self.set_pressed(1)
+            elif event.type == pygame.FINGERUP:
+                self.set_pressed(0)
 
 
 class Slide(pygame.sprite.DirtySprite):

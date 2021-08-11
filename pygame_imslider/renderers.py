@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import pygame
-from pygame import gfxdraw
 
 
 def colorize(image, color):
@@ -111,7 +110,7 @@ class ImSliderRenderer(object):
         """VKeyboardStyle default constructor.
 
         Some parameters take a list of color tuples, one per state.
-        The states are: (released, pressed)
+        The states are: (default, pressed, selected)
 
         :param arrow_color: RGB tuple for arrow color (one tuple per state)
         :param dot_color: RGB tuple for dot color (one tuple per state)
@@ -148,22 +147,30 @@ class ImSliderRenderer(object):
             surface.fill(self.background_color)
         surface.blit(scaled, scaled.get_rect(center=surface.get_rect().center))
 
-    def draw_dot(self, surface, selected):
+    def draw_dot(self, surface, image, selected, pressed):
         """Draw a dot.
 
         :param surface: surface background should be drawn in
         :type surface: :py:class:`pygame.Surface`
-        :param selected: the slide is selected/focused
+        :param selected: the dot is selected/focused
         :type selected: bool
+        :param pressed: the dote is pressed
+        :type pressed: bool
         """
-        rect = surface.get_rect()
-        if selected:
-            color = self.dot_color[1]
+        if pressed:
+            dot = colorize(image, self.dot_color[1])
+        elif selected:
+            dot = colorize(image, self.dot_color[2])
         else:
-            color = self.dot_color[0]
-        # Because anti-aliased filled circle doesn't exist
-        gfxdraw.aacircle(surface, rect.centerx, rect.centery, int(rect.width * 0.9 // 2), color)
-        gfxdraw.filled_circle(surface, rect.centerx, rect.centery, int(rect.width * 0.9 // 2), color)
+            dot = colorize(image, self.dot_color[0])
+        fit_to_rect = dot.get_rect().fit(surface.get_rect())
+        fit_to_rect.center = surface.get_rect().center
+        scaled = pygame.transform.smoothscale(dot, fit_to_rect.size)
+        if self.background_color is None:
+            surface.fill((255, 255, 255, 0))
+        else:
+            surface.fill(self.background_color)
+        surface.blit(scaled, scaled.get_rect(center=surface.get_rect().center))
 
     def draw_slide(self, surface, image, selected):
         """Draw a slide.
@@ -198,7 +205,7 @@ class ImSliderRenderer(object):
 
 ImSliderRenderer.DEFAULT = ImSliderRenderer(
     arrow_color=((255, 255, 255), (54, 54, 54)),
-    dot_color=((54, 54, 54), (255, 255, 255)),
+    dot_color=((120, 120, 120), (54, 54, 54), (255, 255, 255)),
     slide_color=(242, 195, 195),
     selection_color=(245, 95, 76),
     background_color=(32, 135, 156),
@@ -206,7 +213,7 @@ ImSliderRenderer.DEFAULT = ImSliderRenderer(
 
 ImSliderRenderer.DARK = ImSliderRenderer(
     arrow_color=((182, 183, 184), (124, 183, 62)),
-    dot_color=((124, 183, 62), (182, 183, 184)),
+    dot_color=((180, 220, 130), (124, 183, 62), (182, 183, 184)),
     slide_color=(255, 255, 255),
     selection_color=(124, 183, 62),
     background_color=(0, 0, 0),

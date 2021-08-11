@@ -11,7 +11,7 @@ def consumer(index):
     print('Current index : %s' % index)
 
 
-def main(test=False, images=[], parameters={}):
+def main(test=False, images=[], parameters={}, resize=False):
     """ Main program.
 
     :param test: Indicate function is being tested
@@ -21,7 +21,10 @@ def main(test=False, images=[], parameters={}):
 
     # Init pygame
     pygame.init()
-    screen = pygame.display.set_mode((800, 300))
+    if resize:
+        screen = pygame.display.set_mode((800, 300), pygame.RESIZABLE)
+    else:
+        screen = pygame.display.set_mode((800, 300))
     screen.fill((178, 123, 200))
 
     # Create keyboard
