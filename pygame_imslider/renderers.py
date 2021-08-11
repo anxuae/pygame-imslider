@@ -15,15 +15,16 @@ def colorize(image, color):
     """
     image = image.copy()
 
-    # zero out RGB values
+    # Zero out RGB values
     image.fill((0, 0, 0, 255), None, pygame.BLEND_RGBA_MULT)
-    # add in new RGB values
+    # Add in new RGB values
     image.fill(color[0:3] + (0,), None, pygame.BLEND_RGBA_ADD)
     return image
 
 
-def draw_round_rect(surface, color, rect, radius=0.1, width=0):
-    """Draw a rounded rectangle.
+def draw_round_rect(surface, color, rect, radius=0.1):
+    """
+    Draw a filled rounded rectangle.
 
     :param surface: surface to draw on
     :type surface: :py:class:`pygame.Surface`
@@ -35,56 +36,34 @@ def draw_round_rect(surface, color, rect, radius=0.1, width=0):
                    range is [0, 1] with 0 representing a rectangle without rounded
                    corners
     :type radius: int
-    :param width: line thickness (0 to fill the rectangle)
-    :type width: int
     """
     rect = pygame.Rect(rect)
-    if len(color) == 4:
-        alpha = color[-1]
-        color = color[:3] + (0,)
-    else:
-        alpha = 255
-        color += (0,)
+    color = pygame.Color(*color)
+    alpha = color.a
+    color.a = 0
+    pos = rect.topleft
+    rect.topleft = 0, 0
+    rectangle = pygame.Surface(rect.size, pygame.SRCALPHA)
 
-    shape = pygame.Surface(rect.size, pygame.SRCALPHA)
+    circle = pygame.Surface([min(rect.size)*3]*2, pygame.SRCALPHA)
+    pygame.draw.ellipse(circle, (0, 0, 0), circle.get_rect(), 0)
+    circle = pygame.transform.smoothscale(circle, [int(min(rect.size)*radius)]*2)
 
-    circle = pygame.Surface([min(rect.size) * 3] * 2, pygame.SRCALPHA)
-    if width > 0:
-        pygame.draw.arc(circle, (0, 0, 0), circle.get_rect(),
-                        1.571, 3.1415, width * 8)
-    else:
-        pygame.draw.ellipse(circle, (0, 0, 0), circle.get_rect(), 0)
-    circle = pygame.transform.smoothscale(circle,
-                                          [int(min(rect.size) * radius)] * 2)
+    radius = rectangle.blit(circle, (0, 0))
+    radius.bottomright = rect.bottomright
+    rectangle.blit(circle, radius)
+    radius.topright = rect.topright
+    rectangle.blit(circle, radius)
+    radius.bottomleft = rect.bottomleft
+    rectangle.blit(circle, radius)
 
-    i = 1
-    shape_rect = shape.get_rect()
-    for pos in ('topleft', 'topright', 'bottomleft', 'bottomright'):
-        r = circle.get_rect(**{pos: getattr(shape_rect, pos)})
-        shape.blit(circle, r)
-        if width > 0:
-            circle = pygame.transform.rotate(circle, -i * 90)
-        i += 1
+    rectangle.fill((0, 0, 0), rect.inflate(-radius.w, 0))
+    rectangle.fill((0, 0, 0), rect.inflate(0, -radius.h))
 
-    hrect = shape_rect.inflate(0, -circle.get_height() + 1)
-    vrect = shape_rect.inflate(-circle.get_width() + 1, 0)
-    if width > 0:
-        hrect.width = width
-        vrect.height = width
-        shape.fill((0, 0, 0), hrect)
-        shape.fill((0, 0, 0), vrect)
-        hrect.right = shape_rect.right
-        vrect.bottom = shape_rect.bottom
-        shape.fill((0, 0, 0), hrect)
-        shape.fill((0, 0, 0), vrect)
-    else:
-        shape.fill((0, 0, 0), hrect)
-        shape.fill((0, 0, 0), vrect)
+    rectangle.fill(color, special_flags=pygame.BLEND_RGBA_MAX)
+    rectangle.fill((255, 255, 255, alpha), special_flags=pygame.BLEND_RGBA_MIN)
 
-    shape.fill(color, special_flags=pygame.BLEND_RGBA_MAX)
-    shape.fill((255, 255, 255, alpha), special_flags=pygame.BLEND_RGBA_MIN)
-
-    return surface.blit(shape, rect)
+    return surface.blit(rectangle, pos)
 
 
 class ImSliderRenderer(object):
@@ -106,22 +85,25 @@ class ImSliderRenderer(object):
                  dot_color,
                  slide_color,
                  selection_color,
+                 selection_page_color,
                  background_color):
         """VKeyboardStyle default constructor.
 
         Some parameters take a list of color tuples, one per state.
-        The states are: (default, pressed, selected)
+        The states are: (released, pressed)
 
         :param arrow_color: RGB tuple for arrow color (one tuple per state)
         :param dot_color: RGB tuple for dot color (one tuple per state)
         :param slide_color: RGB tuple for sldie color
         :param selection_color: RGB tuple for selected image color
+        :param selection_page_color: RGB tuple for selected page color
         :param background_color: RGB tuple for background color
         """
         self.arrow_color = arrow_color
         self.dot_color = dot_color
         self.slide_color = slide_color
         self.selection_color = selection_color
+        self.selection_page_color = selection_page_color
         self.background_color = background_color
 
     def draw_arrow(self, surface, image, pressed):
@@ -147,20 +129,20 @@ class ImSliderRenderer(object):
             surface.fill(self.background_color)
         surface.blit(scaled, scaled.get_rect(center=surface.get_rect().center))
 
-    def draw_dot(self, surface, image, selected, pressed):
+    def draw_dot(self, surface, image, pressed, selected):
         """Draw a dot.
 
         :param surface: surface background should be drawn in
         :type surface: :py:class:`pygame.Surface`
-        :param selected: the dot is selected/focused
-        :type selected: bool
         :param pressed: the dote is pressed
         :type pressed: bool
+        :param selected: the dot is selected/focused
+        :type selected: bool
         """
         if pressed:
             dot = colorize(image, self.dot_color[1])
         elif selected:
-            dot = colorize(image, self.dot_color[2])
+            dot = colorize(image, self.selection_page_color)
         else:
             dot = colorize(image, self.dot_color[0])
         fit_to_rect = dot.get_rect().fit(surface.get_rect())
@@ -187,11 +169,11 @@ class ImSliderRenderer(object):
             draw_round_rect(surface, self.selection_color, surface.get_rect(), 0.2)
         else:
             draw_round_rect(surface, self.slide_color, surface.get_rect(), 0.2)
-        # scaled = pygame.transform.smoothscale(image, image.get_rect().fit(surface.get_rect()).size)
-        # surface.blit(scaled, scaled.get_rect(center=surface.get_rect().center))
+        scaled = pygame.transform.smoothscale(image, image.get_rect().fit(surface.get_rect()).size)
+        surface.blit(scaled, scaled.get_rect(center=surface.get_rect().center))
 
     def draw_background(self, surface):
-        """Default drawing method for background.
+        """Draw background.
 
         Background is drawn as a simple rectangle filled using this
         style background color attribute.
@@ -205,16 +187,18 @@ class ImSliderRenderer(object):
 
 ImSliderRenderer.DEFAULT = ImSliderRenderer(
     arrow_color=((255, 255, 255), (54, 54, 54)),
-    dot_color=((120, 120, 120), (54, 54, 54), (255, 255, 255)),
+    dot_color=((120, 120, 120), (54, 54, 54)),
     slide_color=(242, 195, 195),
     selection_color=(245, 95, 76),
+    selection_page_color=(255, 255, 255),
     background_color=(32, 135, 156),
 )
 
 ImSliderRenderer.DARK = ImSliderRenderer(
     arrow_color=((182, 183, 184), (124, 183, 62)),
-    dot_color=((180, 220, 130), (124, 183, 62), (182, 183, 184)),
+    dot_color=((182, 183, 184), (124, 183, 62)),
     slide_color=(255, 255, 255),
     selection_color=(124, 183, 62),
+    selection_page_color=(180, 220, 130),
     background_color=(0, 0, 0),
 )

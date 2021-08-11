@@ -5,9 +5,40 @@ pygame-imslider
 
 Flexible images slider for Pygame engine.
 
-.. image:: https://raw.githubusercontent.com/anxuae/pygame-imslider/master/docs/pygame-imslider.png
+Default
+^^^^^^^
+
+.. image:: https://raw.githubusercontent.com/anxuae/pygame-imslider/master/screenshots/default.gif
    :align: center
-   :alt: pygame-imslider
+   :alt: default
+
+Multiple Slides
+^^^^^^^^^^^^^^^
+
+.. image:: https://raw.githubusercontent.com/anxuae/pygame-imslider/master/screenshots/multiple.gif
+   :align: center
+   :alt: multiple
+
+1 Slide Per Move
+^^^^^^^^^^^^^^^^
+
+.. image:: https://raw.githubusercontent.com/anxuae/pygame-imslider/master/screenshots/one_per_move.gif
+   :align: center
+   :alt: one_per_move
+
+Focus Center
+^^^^^^^^^^^^
+
+.. image:: https://raw.githubusercontent.com/anxuae/pygame-imslider/master/screenshots/focus.gif
+   :align: center
+   :alt: focus
+
+Fade Transition
+^^^^^^^^^^^^^^^
+
+.. image:: https://raw.githubusercontent.com/anxuae/pygame-imslider/master/screenshots/fade.gif
+   :align: center
+   :alt: fade
 
 Install
 -------
@@ -35,14 +66,14 @@ in the following example :
 The slider has the following optional parameters:
 
 - **stype**: determine a slider type: STYPE_SLIDE, STYPE_LOOP or STYPE_FADE
-- **per_page**: determine how many slides should be displayed per page. In
-  "fade" stype, this option is ignored.
+- **per_page**: determine how many slides should be displayed per page. If
+  stype=STYPE_FADE, this option is ignored.
 - **per_move**: determine how many slides should be moved when a slider goes
-  to next or perv. In "fade" stype, this option is ignored.
+  to next or perv. If stype=STYPE_FADE, this option is ignored.
 - **focus**: determine which slide should be focused if there are multiple
   slides in a page. A string "center" is acceptable for centering slides.
 - **rewind**: whether to rewind a slider before the first slide or after the
-  last one. In "loop" stype, this option is ignored.
+  last one. If stype=STYPE_LOOP, this option is ignored.
 - **speed**: transition duration in seconds.
 - **renderer**: a ImSliderRenderer to customize colors of the slider
 - **callback**: callback called each time the selection is changed.
@@ -59,8 +90,6 @@ A ``ImSlider`` object handles the following pygame event :
 - **KEYDOWN**
 - **KEYUP**
 - **JOYHATMOTION**
-- **JOYBUTTONDOWN**
-- **JOYBUTTONUP**
 
 In order to process those events, slider instance event handling method should be called like
 in the following example:
@@ -84,8 +113,8 @@ in the following example:
         # Update the display
         pygame.display.flip()
 
-The global performances can be improved avoiding to flip the entire display at each loop by
-using the ``pygame.display.update()`` function.
+The **global performances can be improved avoiding to flip the entire display** at each
+loop by using the ``pygame.display.update()`` function.
 
 .. code-block:: python
 
@@ -96,11 +125,52 @@ using the ``pygame.display.update()`` function.
 
        # Update only the dirty rectangles of the display
        pygame.display.update(rects)
-   ```
 
 .. note:: the ``surface`` parameter of the ``draw()`` method is optional, it is used to
           clear/hide the slider when it is necessary and may be mandatory if the surface
           has changed.
+
+Custom rendering using ImSliderRenderer
+---------------------------------------
+
+If you want to customize slider rendering you could provide a ``ImSliderRenderer``
+instance at ``ImSlider``construction.
+
+.. code-block:: python
+
+    keyboard = ImSlider(size, renderer=ImSliderRenderer.DARK)
+
+Here is the list of default renderers provided with ``pygame-imslider``:
+
+- ImSliderRenderer.DEFAULT
+- ImSliderRenderer.DARK
+
+A custom ``ImSliderRenderer`` can be built using following constructor :
+
+.. code-block:: python
+
+    renderer = ImSliderRenderer(
+        # RGB tuple for arrow color (one per state: released, pressed).
+        ((255, 255, 255), (54, 54, 54)),
+        # RGB tuple for dot color (one tuple per state).
+        ((120, 120, 120), (54, 54, 54)),
+        # RGB tuple for sldie color.
+        (242, 195, 195),
+        # RGB tuple for selected image color.
+        (245, 95, 76),
+        # RGB tuple for selected page color.
+        (255, 255, 255),
+        # RGB tuple for background color.
+        (32, 135, 156)
+        )
+
+You can also create your own renderer. Just override ``ImSliderRenderer``class and
+override any of the following methods:
+
+- **draw_arrow(surface, image, pressed)**: Draw an arrow.
+- **draw_dot(surface, image, pressed, selected)**: Draw a dot.
+- **draw_slide(surface, image, selected)**: Draw a slide.
+- **draw_background(surface)**: Draw background.
 
 Getting/Setting data
 --------------------

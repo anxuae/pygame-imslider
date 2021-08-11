@@ -3,21 +3,29 @@
 
 """Simple image slider."""
 
+import os
+import os.path as osp
 import pygame
 import pygame_imslider as imslider
+
+HERE = osp.dirname(osp.abspath(__file__))
 
 
 def consumer(index):
     print('Current index : %s' % index)
 
 
-def main(test=False, images=[], parameters={}, resize=False):
+def main(test=False, images_nbr=None, parameters={}, resize=False):
     """ Main program.
 
     :param test: Indicate function is being tested
     :type test: bool
     :return: None
     """
+    images = [osp.join(HERE, 'images', name) for name in os.listdir(osp.join(HERE, 'images'))
+              if name.endswith('.png')]
+    if images_nbr:
+        images = images[:images_nbr]
 
     # Init pygame
     pygame.init()
@@ -29,7 +37,7 @@ def main(test=False, images=[], parameters={}, resize=False):
 
     # Create keyboard
     slider = imslider.ImSlider(screen.get_size(), callback=consumer, **parameters)
-    slider.load_images(images, True)
+    slider.load_images(images)
 
     clock = pygame.time.Clock()
 
@@ -56,4 +64,4 @@ def main(test=False, images=[], parameters={}, resize=False):
 
 
 if __name__ == '__main__':
-    main(False, ["a", "b", "c", "d"])
+    main(False, 4)

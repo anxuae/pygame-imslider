@@ -43,7 +43,8 @@ def main():
         ],
         packages=find_packages(),
         package_data={
-            'pygame_imslider': ['*/*.png'],
+            'pygame_imslider': ['*.png'],
+            'pygame_imslider.examples.images': ['*.png'],
         },
         include_package_data=True,
         python_requires=">=3.6",

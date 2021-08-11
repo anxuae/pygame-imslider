@@ -57,20 +57,23 @@ class Arrow(pygame.sprite.DirtySprite):
         If set to 1, the arrow is pressed.
     """
 
-    def __init__(self, arrow_path, renderer):
+    def __init__(self, arrow_path, renderer, pressed_key=None):
         """
         :param arrow_path: path to the arrow image shape
         :type arrow_path: str
         :param renderer: render used to render the arrow
         :type renderer: :py:class:`SliderRenderer`
+        :param pressed_key: key to press to set pressed state
+        :type pressed_key: int
         """
         super(Arrow, self).__init__()
         self.renderer = renderer
         self.pressed = 0
+        self.pressed_key = pressed_key
         self.pressed_time = 0
         self.rect = pygame.Rect((0, 0), (10, 10))
         self.image = pygame.Surface(self.rect.size, pygame.SRCALPHA, 32)
-        self.image_source = pygame.image.load(arrow_path)
+        self.image_source = pygame.image.load(arrow_path).convert_alpha()
 
     def set_position(self, x, y):
         """Set the arrow position.
@@ -139,7 +142,13 @@ class Arrow(pygame.sprite.DirtySprite):
             elif event.type == pygame.FINGERUP:
                 self.set_pressed(0)
                 self.pressed_time = 0
-
+            elif event.type == pygame.KEYDOWN:
+                if event.key == self.pressed_key:
+                    self.set_pressed(1)
+            elif event.type == pygame.KEYUP:
+                if event.key == self.pressed_key:
+                    self.set_pressed(0)
+                    self.pressed_time = 0
 
 class Dot(pygame.sprite.DirtySprite):
 
@@ -154,7 +163,7 @@ class Dot(pygame.sprite.DirtySprite):
         self.image = pygame.Surface(self.rect.size, pygame.SRCALPHA, 32)
         if not Dot.image_source:
             # Load image only one time to save memory
-            Dot.image_source = pygame.image.load(dot_path)
+            Dot.image_source = pygame.image.load(dot_path).convert_alpha()
 
     def set_position(self, x, y):
         """Set the dot position.
@@ -179,7 +188,7 @@ class Dot(pygame.sprite.DirtySprite):
         if self.rect.size != (width, height):
             self.rect.size = (width, height)
             self.image = pygame.Surface(self.rect.size, pygame.SRCALPHA, 32)
-            self.renderer.draw_dot(self.image, self.image_source, self.selected, self.pressed)
+            self.renderer.draw_dot(self.image, self.image_source, self.pressed, self.selected)
             self.dirty = 1
 
     def set_selected(self, state):
@@ -190,7 +199,7 @@ class Dot(pygame.sprite.DirtySprite):
         """
         if self.selected != int(state):
             self.selected = int(state)
-            self.renderer.draw_dot(self.image, self.image_source, self.selected, self.pressed)
+            self.renderer.draw_dot(self.image, self.image_source, self.pressed, self.selected)
             self.dirty = 1
 
     def set_pressed(self, state):
@@ -201,7 +210,7 @@ class Dot(pygame.sprite.DirtySprite):
         """
         if self.pressed != int(state):
             self.pressed = int(state)
-            self.renderer.draw_dot(self.image, self.image_source, self.selected, self.pressed)
+            self.renderer.draw_dot(self.image, self.image_source, self.pressed, self.selected)
             self.dirty = 1
 
     def update(self, events, dt):
@@ -260,11 +269,9 @@ class Slide(pygame.sprite.DirtySprite):
             self._selected = 0
             self._image_path = image_path
             if load:
-                self._image_source = pygame.image.load(image_path).convert()
+                self._image_source = pygame.image.load(image_path).convert_alpha()
             else:
                 self._image_source = None
-            #     font = pygame.font.Font(pygame.font.match_font('arial'), 30)
-            #     self._image_source = font.render(image_path, True, (0, 200, 0))
 
         # Attributes than can differe from parents
         self.rect = pygame.Rect((0, 0), (10, 10))

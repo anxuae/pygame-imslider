@@ -73,8 +73,8 @@ class ImSlider(object):
         self.renderer = renderer
         self.background = Background(self.renderer)
 
-        self.arrows = (Arrow(osp.join(HERE, "left.png"), self.renderer),
-                       Arrow(osp.join(HERE, "right.png"), self.renderer))
+        self.arrows = (Arrow(osp.join(HERE, "left.png"), self.renderer, pygame.K_LEFT),
+                       Arrow(osp.join(HERE, "right.png"), self.renderer, pygame.K_RIGHT))
         self.pressed_repeat_time = 0.4
 
         self.sprites = pygame.sprite.LayeredDirty()
@@ -279,7 +279,6 @@ class ImSlider(object):
 
                 page = self.get_page_at(event.pos)
                 if page is not None:
-                    print(page)
                     self.set_index(self.per_page * page)
 
             elif event.type == pygame.FINGERDOWN:
@@ -293,6 +292,12 @@ class ImSlider(object):
                 page = self.get_page_at(event.pos)
                 if page is not None:
                     self.set_index(self.per_page * page)
+
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    self.on_previous()
+                elif event.key == pygame.K_RIGHT:
+                    self.on_next()
 
             elif event.type == pygame.JOYHATMOTION:
                 if self.arrows[0].visible and event.value == JOYHAT_LEFT:
@@ -326,10 +331,10 @@ class ImSlider(object):
     def update_pages(self):
         """Update pages indication.
         """
-        current_page = self.layout.selection // self.per_page + 1
+        current_page = self.layout.selection // self.per_page
         count = 0
         for dot in self.sprites.get_sprites_from_layer(2):
-            if count < current_page:
+            if count == current_page:
                 dot.set_selected(1)
             else:
                 dot.set_selected(0)
