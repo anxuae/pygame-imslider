@@ -15,11 +15,12 @@ Default
 .. raw:: html
 
    <details>
-   <summary><a>big code</a></summary>
+   <summary><a>View Example Code</a></summary>
 
 .. code-block:: python
 
-   lots_of_code = "this text block"
+   slider = ImSlider((800, 300))
+   slider.load_images(images)
 
 .. raw:: html
 
@@ -32,12 +33,40 @@ Multiple Slides
    :align: center
    :alt: multiple
 
+.. raw:: html
+
+   <details>
+   <summary><a>View Example Code</a></summary>
+
+.. code-block:: python
+
+   slider = ImSlider((800, 300), per_page=3, rewind=True)
+   slider.load_images(images)
+
+.. raw:: html
+
+   </details>
+
 1 Slide Per Move
 ^^^^^^^^^^^^^^^^
 
 .. image:: https://raw.githubusercontent.com/anxuae/pygame-imslider/master/screenshots/one_per_move.gif
    :align: center
    :alt: one_per_move
+
+.. raw:: html
+
+   <details>
+   <summary><a>View Example Code</a></summary>
+
+.. code-block:: python
+
+   slider = ImSlider((800, 300), stype=STYPE_LOOP, per_page=3, per_move=1)
+   slider.load_images(images)
+
+.. raw:: html
+
+   </details>
 
 Focus Center
 ^^^^^^^^^^^^
@@ -46,12 +75,40 @@ Focus Center
    :align: center
    :alt: focus
 
+.. raw:: html
+
+   <details>
+   <summary><a>View Example Code</a></summary>
+
+.. code-block:: python
+
+   slider = ImSlider((800, 300), stype=STYPE_LOOP, per_page=3, per_move=2, focus='center')
+   slider.load_images(images)
+
+.. raw:: html
+
+   </details>
+
 Fade Transition
 ^^^^^^^^^^^^^^^
 
 .. image:: https://raw.githubusercontent.com/anxuae/pygame-imslider/master/screenshots/fade.gif
    :align: center
    :alt: fade
+
+.. raw:: html
+
+   <details>
+   <summary><a>View Example Code</a></summary>
+
+.. code-block:: python
+
+   slider = ImSlider((800, 300), stype=STYPE_FADE, rewind=True, focus=False)
+   slider.load_images(images)
+
+.. raw:: html
+
+   </details>
 
 Install
 -------
