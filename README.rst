@@ -12,6 +12,19 @@ Default
    :align: center
    :alt: default
 
+.. raw:: html
+
+   <details>
+   <summary><a>big code</a></summary>
+
+.. code-block:: python
+
+   lots_of_code = "this text block"
+
+.. raw:: html
+
+   </details>
+
 Multiple Slides
 ^^^^^^^^^^^^^^^
 
@@ -138,7 +151,7 @@ instance at ``ImSlider``construction.
 
 .. code-block:: python
 
-    keyboard = ImSlider(size, renderer=ImSliderRenderer.DARK)
+    slider = ImSlider(size, renderer=ImSliderRenderer.DARK)
 
 Here is the list of default renderers provided with ``pygame-imslider``:
 
@@ -175,7 +188,7 @@ override any of the following methods:
 Getting/Setting data
 --------------------
 
-Several information can be retrieved from the keyboard:
+Several information can be retrieved from the slider:
 
 .. code-block:: python
 
