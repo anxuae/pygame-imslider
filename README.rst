@@ -12,19 +12,11 @@ Default
    :align: center
    :alt: default
 
-.. raw:: html
-
-   <details>
-   <summary><a>View Example Code</a></summary>
+**Example Code:**
 
 .. code-block:: python
 
    slider = ImSlider((800, 300))
-   slider.load_images(images)
-
-.. raw:: html
-
-   </details>
 
 Multiple Slides
 ^^^^^^^^^^^^^^^
@@ -33,19 +25,11 @@ Multiple Slides
    :align: center
    :alt: multiple
 
-.. raw:: html
-
-   <details>
-   <summary><a>View Example Code</a></summary>
+**Example Code:**
 
 .. code-block:: python
 
    slider = ImSlider((800, 300), per_page=3, rewind=True)
-   slider.load_images(images)
-
-.. raw:: html
-
-   </details>
 
 1 Slide Per Move
 ^^^^^^^^^^^^^^^^
@@ -54,19 +38,11 @@ Multiple Slides
    :align: center
    :alt: one_per_move
 
-.. raw:: html
-
-   <details>
-   <summary><a>View Example Code</a></summary>
+**Example Code:**
 
 .. code-block:: python
 
    slider = ImSlider((800, 300), stype=STYPE_LOOP, per_page=3, per_move=1)
-   slider.load_images(images)
-
-.. raw:: html
-
-   </details>
 
 Focus Center
 ^^^^^^^^^^^^
@@ -75,19 +51,11 @@ Focus Center
    :align: center
    :alt: focus
 
-.. raw:: html
-
-   <details>
-   <summary><a>View Example Code</a></summary>
+**Example Code:**
 
 .. code-block:: python
 
    slider = ImSlider((800, 300), stype=STYPE_LOOP, per_page=3, per_move=2, focus='center')
-   slider.load_images(images)
-
-.. raw:: html
-
-   </details>
 
 Fade Transition
 ^^^^^^^^^^^^^^^
@@ -96,19 +64,11 @@ Fade Transition
    :align: center
    :alt: fade
 
-.. raw:: html
-
-   <details>
-   <summary><a>View Example Code</a></summary>
+**Example Code:**
 
 .. code-block:: python
 
    slider = ImSlider((800, 300), stype=STYPE_FADE, rewind=True, focus=False)
-   slider.load_images(images)
-
-.. raw:: html
-
-   </details>
 
 Install
 -------
@@ -132,6 +92,7 @@ in the following example :
 
     # Initializes and activates ImSlider
     slider = ImSlider((300, 100), callback=consumer)
+    slider.load_images(['image1.png', 'image2.png', 'image3.png',])
 
 The slider has the following optional parameters:
 
@@ -204,7 +165,7 @@ Custom rendering using ImSliderRenderer
 ---------------------------------------
 
 If you want to customize slider rendering you could provide a ``ImSliderRenderer``
-instance at ``ImSlider``construction.
+instance at ``ImSlider`` construction.
 
 .. code-block:: python
 
@@ -234,7 +195,7 @@ A custom ``ImSliderRenderer`` can be built using following constructor :
         (32, 135, 156)
         )
 
-You can also create your own renderer. Just override ``ImSliderRenderer``class and
+You can also create your own renderer. Just override ``ImSliderRenderer`` class and
 override any of the following methods:
 
 - **draw_arrow(surface, image, pressed)**: Draw an arrow.
