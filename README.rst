@@ -12,8 +12,6 @@ Default
    :align: center
    :alt: default
 
-**Example Code:**
-
 .. code-block:: python
 
    slider = ImSlider((800, 300))
@@ -24,8 +22,6 @@ Multiple Slides
 .. image:: https://raw.githubusercontent.com/anxuae/pygame-imslider/master/screenshots/multiple.gif
    :align: center
    :alt: multiple
-
-**Example Code:**
 
 .. code-block:: python
 
@@ -38,8 +34,6 @@ Multiple Slides
    :align: center
    :alt: one_per_move
 
-**Example Code:**
-
 .. code-block:: python
 
    slider = ImSlider((800, 300), stype=STYPE_LOOP, per_page=3, per_move=1)
@@ -51,8 +45,6 @@ Focus Center
    :align: center
    :alt: focus
 
-**Example Code:**
-
 .. code-block:: python
 
    slider = ImSlider((800, 300), stype=STYPE_LOOP, per_page=3, per_move=2, focus='center')
@@ -63,8 +55,6 @@ Fade Transition
 .. image:: https://raw.githubusercontent.com/anxuae/pygame-imslider/master/screenshots/fade.gif
    :align: center
    :alt: fade
-
-**Example Code:**
 
 .. code-block:: python
 

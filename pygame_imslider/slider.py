@@ -56,7 +56,6 @@ class ImSlider(object):
         self._per_page = per_page
         self._per_move = per_move
         self.clock = pygame.time.Clock()
-        self.size = size
         self.stype = stype
         self.focus = focus
         self.rewind = rewind
@@ -82,7 +81,7 @@ class ImSlider(object):
         for arrow in self.arrows:
             self.sprites.add(arrow, layer=1)
 
-        self.set_size(*self.size)
+        self.set_size(*size)
 
     @property
     def per_page(self):
@@ -100,11 +99,12 @@ class ImSlider(object):
         :param lazy: load images only when needed
         :type lazy: bool
         """
+        size = self.get_rect().size
         self.layout.empty()
         for path in images:
             self.layout.add_slide(Slide(path, self.renderer, not lazy))
         self.layout.set_position(self.background.rect.x + self.arrows[0].rect.width, self.background.rect.y)
-        self.layout.set_size(self.size[0] - 2 * self.arrows[0].rect.width, self.size[1])
+        self.layout.set_size(size[0] - 2 * self.arrows[0].rect.width, size[1])
         self.layout.set_selection(pos=0)
 
         self.sprites.remove_sprites_of_layer(2)
@@ -186,11 +186,10 @@ class ImSlider(object):
         :param height: slider height
         :type height: int
         """
-        self.size = (width, height)
         self.background.set_position(0, 0)
-        self.background.set_size(*self.size)
+        self.background.set_size(width, height)
 
-        arrow_width = int(self.size[0] * 0.1 / 2)
+        arrow_width = int(width * 0.1 / 2)
         # Left Arrow
         self.arrows[0].set_size(arrow_width, 2 * arrow_width)
         self.arrows[0].set_position(0, self.background.rect.height // 2 - self.arrows[0].rect.height // 2)
@@ -200,7 +199,7 @@ class ImSlider(object):
                                     self.background.rect.height // 2 - self.arrows[1].rect.height // 2)
 
         self.layout.set_position(self.background.rect.x + arrow_width, self.background.rect.y)
-        self.layout.set_size(self.size[0] - 2 * arrow_width, self.size[1])
+        self.layout.set_size(width - 2 * arrow_width, height)
 
         self.setup_pagination()
 
