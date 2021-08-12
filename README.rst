@@ -205,6 +205,9 @@ Several information can be retrieved from the slider:
     # Get a pygame.Rect object in which the slider is included.
     slider.get_rect()
 
+    # Get the current pygame image (optionally resized).
+    slider.get_image()
+
     # Get the current index.
     slider.get_index()
 

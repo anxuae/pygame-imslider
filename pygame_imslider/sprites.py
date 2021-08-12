@@ -271,7 +271,7 @@ class Slide(pygame.sprite.DirtySprite):
             if load:
                 self._image_source = pygame.image.load(image_path).convert_alpha()
             else:
-                self._image_source = None
+                raise NotImplementedError
 
         # Attributes than can differe from parents
         self.rect = pygame.Rect((0, 0), (10, 10))

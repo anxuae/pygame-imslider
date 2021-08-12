@@ -160,6 +160,17 @@ class ImSlider(object):
         """Return slider rect."""
         return self.background.rect
 
+    def get_image(self, resized=False):
+        """Return the :py:class:`Surface` of the currently selected image.
+
+        :param resized: if True, return the surface resized to fit the slide
+        :type resized: bool
+        """
+        slide = self.layout.slides[self.layout.selection]
+        if resized:
+            return slide.image
+        return slide.image_source
+
     def get_index(self):
         """Return the index of the currently selected image."""
         return self.layout.selection
