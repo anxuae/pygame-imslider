@@ -173,13 +173,13 @@ A custom ``ImSliderRenderer`` can be built using following constructor :
     renderer = ImSliderRenderer(
         # RGB tuple for arrow color (one per state: released, pressed).
         ((255, 255, 255), (54, 54, 54)),
-        # RGB tuple for dot color (one tuple per state).
+        # RGB tuple for page-dot color (one tuple per state).
         ((120, 120, 120), (54, 54, 54)),
         # RGB tuple for sldie color.
         (242, 195, 195),
         # RGB tuple for selected image color.
         (245, 95, 76),
-        # RGB tuple for selected page color.
+        # RGB tuple for selected page-dot color.
         (255, 255, 255),
         # RGB tuple for background color.
         (32, 135, 156)

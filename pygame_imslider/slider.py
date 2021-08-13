@@ -299,7 +299,7 @@ class ImSlider(object):
                 elif self.arrows[1].visible and self.arrows[1].rect.collidepoint(finger_pos):
                     self.on_next()
 
-                page = self.get_page_at(event.pos)
+                page = self.get_page_at(finger_pos)
                 if page is not None:
                     self.set_index(self.per_page * page)
 
