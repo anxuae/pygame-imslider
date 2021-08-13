@@ -5,6 +5,7 @@
 
 import os
 import os.path as osp
+import cProfile, pstats
 import pygame
 import pygame_imslider as imslider
 
@@ -50,6 +51,9 @@ def main(test=False, images_nbr=None, parameters={}, resize=False):
         for event in events:
             if event.type == pygame.QUIT:
                 print("Average FPS: ", clock.get_fps())
+                if hasattr(cProfile, 'profiler'):
+                    stats = pstats.Stats(cProfile.profiler).sort_stats('cumtime')
+                    stats.print_stats()
                 exit()
 
         slider.update(events)

@@ -22,6 +22,9 @@ STYPE_LOOP = 'loop'
 # Change slides with fade transition
 STYPE_FADE = 'fade'
 
+import cProfile, pstats
+cProfile.profiler = cProfile.Profile()
+
 
 class ImSlider(object):
 
@@ -247,9 +250,10 @@ class ImSlider(object):
         # Setup eraser
         if not self.eraser or force:
             self.set_eraser(surface)
-
+        cProfile.profiler.enable()
         rects = self.sprites.draw(surface)
         rects += self.layout.draw(surface)
+        cProfile.profiler.disable()
 
         if force:
             self.sprites.repaint_rect(self.background.rect)
