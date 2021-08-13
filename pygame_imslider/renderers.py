@@ -22,48 +22,53 @@ def colorize(image, color):
     return image
 
 
-def draw_round_rect(surface, color, rect, radius=0.1):
-    """
-    Draw a filled rounded rectangle.
+def get_roundrect_shape(rect, radius=0.1, width=0):
+    """Return a rounded rectangle shape.
 
-    :param surface: surface to draw on
-    :type surface: :py:class:`pygame.Surface`
-    :param color: RGBA tuple color to draw with, the alpha value is optional
-    :type color: tuple
-    :param rect: rectangle to draw, position and dimensions
-    :type rect: :py:class:`pygame.Rect`
-    :param radius: used for drawing rectangle with rounded corners. The supported
-                   range is [0, 1] with 0 representing a rectangle without rounded
-                   corners
-    :type radius: int
+    Parameters
+    ----------
+    rect:
+        Rectangle to draw, position and dimensions.
+    radius:
+        Used for drawing rectangle with rounded corners. The supported range is
+        [0, 1] with 0 representing a rectangle without rounded corners.
+    width:
+        Line thickness (0 to fill the rectangle).
     """
     rect = pygame.Rect(rect)
-    color = pygame.Color(*color)
-    alpha = color.a
-    color.a = 0
-    pos = rect.topleft
-    rect.topleft = 0, 0
-    rectangle = pygame.Surface(rect.size, pygame.SRCALPHA)
+    shape = pygame.Surface(rect.size, pygame.SRCALPHA)
 
-    circle = pygame.Surface([min(rect.size)*3]*2, pygame.SRCALPHA)
-    pygame.draw.ellipse(circle, (0, 0, 0), circle.get_rect(), 0)
-    circle = pygame.transform.smoothscale(circle, [int(min(rect.size)*radius)]*2)
+    circle = pygame.Surface([min(rect.size) * 3] * 2, pygame.SRCALPHA)
+    if width > 0:
+        pygame.draw.arc(circle, (0, 0, 0), circle.get_rect(), 1.571, 3.1415, width * 8)
+    else:
+        pygame.draw.ellipse(circle, (0, 0, 0), circle.get_rect(), 0)
+    circle = pygame.transform.smoothscale(circle, [int(min(rect.size) * radius)] * 2)
 
-    radius = rectangle.blit(circle, (0, 0))
-    radius.bottomright = rect.bottomright
-    rectangle.blit(circle, radius)
-    radius.topright = rect.topright
-    rectangle.blit(circle, radius)
-    radius.bottomleft = rect.bottomleft
-    rectangle.blit(circle, radius)
+    i = 1
+    shape_rect = shape.get_rect()
+    for pos in ('topleft', 'topright', 'bottomleft', 'bottomright'):
+        r = circle.get_rect(**{pos: getattr(shape_rect, pos)})
+        shape.blit(circle, r)
+        if width > 0:
+            circle = pygame.transform.rotate(circle, -i * 90)
+        i += 1
 
-    rectangle.fill((0, 0, 0), rect.inflate(-radius.w, 0))
-    rectangle.fill((0, 0, 0), rect.inflate(0, -radius.h))
-
-    rectangle.fill(color, special_flags=pygame.BLEND_RGBA_MAX)
-    rectangle.fill((255, 255, 255, alpha), special_flags=pygame.BLEND_RGBA_MIN)
-
-    return surface.blit(rectangle, pos)
+    hrect = shape_rect.inflate(0, -circle.get_height() + 1)
+    vrect = shape_rect.inflate(-circle.get_width() + 1, 0)
+    if width > 0:
+        hrect.width = width
+        vrect.height = width
+        shape.fill((0, 0, 0), hrect)
+        shape.fill((0, 0, 0), vrect)
+        hrect.right = shape_rect.right
+        vrect.bottom = shape_rect.bottom
+        shape.fill((0, 0, 0), hrect)
+        shape.fill((0, 0, 0), vrect)
+    else:
+        shape.fill((0, 0, 0), hrect)
+        shape.fill((0, 0, 0), vrect)
+    return shape
 
 
 class ImSliderRenderer(object):
@@ -154,23 +159,37 @@ class ImSliderRenderer(object):
             surface.fill(self.background_color)
         surface.blit(scaled, scaled.get_rect(center=surface.get_rect().center))
 
-    def draw_slide(self, surface, image, selected):
+    def draw_selection(self, surface, image_cache, selected):
+        """Draw selection around the slide.
+
+        :param surface: surface background should be drawn in
+        :type surface: :py:class:`pygame.Surface`
+        :param image_cache: cached (scaled image, shape) built when drawing slide
+        :type image_cache: (:py:class:`pygame.Surface`, :py:class:`pygame.Surface`)
+        :param selected: the slide is selected/focused
+        :type selected: bool
+        """
+        scaled, shape = image_cache
+        surface.fill((255, 255, 255, 0))  # Clear the current slide
+        if selected:
+            surface.blit(colorize(shape, self.selection_color), (0, 0))
+        else:
+            surface.blit(colorize(shape, self.slide_color), (0, 0))
+        surface.blit(scaled, scaled.get_rect(center=surface.get_rect().center))
+
+    def draw_slide(self, surface, image_source):
         """Draw a slide.
 
         :param surface: surface background should be drawn in
         :type surface: :py:class:`pygame.Surface`
-        :param image: image to draw on slide
-        :type image: :py:class:`pygame.Surface`
-        :param selected: the slide is selected/focused
-        :type selected: bool
+        :param image_source: source image to draw on slide
+        :type image_source: :py:class:`pygame.Surface`
         """
-        surface.fill((255, 255, 255, 0))  # Clear the current slide
-        if selected:
-            draw_round_rect(surface, self.selection_color, surface.get_rect(), 0.2)
-        else:
-            draw_round_rect(surface, self.slide_color, surface.get_rect(), 0.2)
-        scaled = pygame.transform.smoothscale(image, image.get_rect().fit(surface.get_rect()).size)
+        shape = get_roundrect_shape(surface.get_rect(), 0.2)
+        scaled = pygame.transform.smoothscale(image_source, image_source.get_rect().fit(surface.get_rect()).size)
+        surface.blit(colorize(shape, self.slide_color), (0, 0))
         surface.blit(scaled, scaled.get_rect(center=surface.get_rect().center))
+        return (scaled, shape)
 
     def draw_background(self, surface):
         """Draw background.

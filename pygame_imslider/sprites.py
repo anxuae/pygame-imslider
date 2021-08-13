@@ -150,6 +150,7 @@ class Arrow(pygame.sprite.DirtySprite):
                     self.set_pressed(0)
                     self.pressed_time = 0
 
+
 class Dot(pygame.sprite.DirtySprite):
 
     image_source = None
@@ -268,6 +269,7 @@ class Slide(pygame.sprite.DirtySprite):
             self._renderer = renderer
             self._selected = 0
             self._image_path = image_path
+            self._image_cache = None
             if load:
                 self._image_source = pygame.image.load(image_path).convert_alpha()
             else:
@@ -305,6 +307,12 @@ class Slide(pygame.sprite.DirtySprite):
             return self.parent.image_source
         return self._image_source
 
+    @property
+    def image_cache(self):
+        if self.parent:
+            return self.parent.image_cache
+        return self._image_cache
+
     def clone(self):
         """Return a clone of the slide. A clone has the same attributes than its parent
         but can have different:
@@ -340,7 +348,7 @@ class Slide(pygame.sprite.DirtySprite):
         if self.rect.size != (width, height):
             self.rect.size = (width, height)
             self.image = pygame.Surface(self.rect.size, pygame.SRCALPHA, 32)
-            self.renderer.draw_slide(self.image, self.image_source, self.selected)
+            self._image_cache = self.renderer.draw_slide(self.image, self.image_source)
             self.dirty = 1
 
     def set_selected(self, state):
@@ -352,7 +360,7 @@ class Slide(pygame.sprite.DirtySprite):
         """
         if self._selected != int(state):
             self._selected = int(state)
-            self.renderer.draw_slide(self.image, self.image_source, self.selected)
+            self.renderer.draw_selection(self.image, self.image_cache, self.selected)
             self.dirty = 1
 
     def set_alpha(self, alpha):
