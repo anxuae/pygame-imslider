@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import pygame_imslider as imslider
-from .default import main
+from pygame_imslider.examples.default import main
 
 
 if __name__ == '__main__':
