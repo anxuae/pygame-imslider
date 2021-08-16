@@ -111,31 +111,76 @@ class ImSliderRenderer(object):
         self.selection_page_color = selection_page_color
         self.background_color = background_color
 
-    def draw_arrow(self, surface, image, pressed):
+        # Cached surfaces to optimize computation
+        self.slide_shape = None
+        self.slide_selected_shape = None
+        self.arrow_shape = None
+        self.arrow_pressed_shape = None
+        self.dot_shape = None
+        self.dot_selected_shape = None
+        self.dot_pressed_shape = None
+
+    def draw_arrow(self, surface, arrow):
         """Draw an arrow.
 
         :param surface: surface background should be drawn in
         :type surface: :py:class:`pygame.Surface`
-        :param image: image of the arrow to draw
-        :type image: :py:class:`pygame.Surface`
-        :param pressed: the slide is pressed
-        :type pressed: bool
+        :param arrow: arrow to draw
+        :type arrow: :py:class:`Arrow`
         """
-        if pressed:
-            arrow = colorize(image, self.arrow_color[1])
-        else:
-            arrow = colorize(image, self.arrow_color[0])
-        fit_to_rect = arrow.get_rect().fit(surface.get_rect())
+        fit_to_rect = arrow.image_source.get_rect().fit(surface.get_rect())
         fit_to_rect.center = surface.get_rect().center
-        scaled = pygame.transform.smoothscale(arrow, fit_to_rect.size)
+        scaled = pygame.transform.smoothscale(arrow.image_source, fit_to_rect.size)
+        self.arrow_shape = colorize(scaled, self.arrow_color[0])
+        self.arrow_pressed_shape = colorize(scaled, self.arrow_color[1])
+
         if self.background_color is None:
             surface.fill((255, 255, 255, 0))
         else:
             surface.fill(self.background_color)
-        surface.blit(scaled, scaled.get_rect(center=surface.get_rect().center))
+        surface.blit(self.arrow_shape, self.arrow_shape.get_rect(center=surface.get_rect().center))
 
-    def draw_dot(self, surface, image, pressed, selected):
+    def draw_arrow_state(self, surface, pressed):
+        """Draw arrow state.
+
+        :param surface: surface background should be drawn in
+        :type surface: :py:class:`pygame.Surface`
+        :param pressed: the slide is pressed
+        :type pressed: bool
+        """
+        if self.background_color is None:
+            surface.fill((255, 255, 255, 0))
+        else:
+            surface.fill(self.background_color)
+        if pressed:
+            image = self.arrow_pressed_shape
+        else:
+            image = self.arrow_shape
+        surface.blit(image, image.get_rect(center=surface.get_rect().center))
+
+    def draw_dot(self, surface, dot):
         """Draw a dot.
+
+        :param surface: surface background should be drawn in
+        :type surface: :py:class:`pygame.Surface`
+        :param dot: dot to draw
+        :type dot: :py:class:`Dot`
+        """
+        fit_to_rect = dot.image_source.get_rect().fit(surface.get_rect())
+        fit_to_rect.center = surface.get_rect().center
+        scaled = pygame.transform.smoothscale(dot.image_source, fit_to_rect.size)
+        self.dot_shape = colorize(scaled, self.dot_color[0])
+        self.dot_pressed_shape = colorize(scaled, self.dot_color[1])
+        self.dot_selected_shape = colorize(scaled, self.selection_page_color)
+
+        if self.background_color is None:
+            surface.fill((255, 255, 255, 0))
+        else:
+            surface.fill(self.background_color)
+        surface.blit(self.dot_shape, self.dot_shape.get_rect(center=surface.get_rect().center))
+
+    def draw_dot_state(self, surface, pressed, selected):
+        """Draw dot state.
 
         :param surface: surface background should be drawn in
         :type surface: :py:class:`pygame.Surface`
@@ -144,52 +189,55 @@ class ImSliderRenderer(object):
         :param selected: the dot is selected/focused
         :type selected: bool
         """
-        if pressed:
-            dot = colorize(image, self.dot_color[1])
-        elif selected:
-            dot = colorize(image, self.selection_page_color)
-        else:
-            dot = colorize(image, self.dot_color[0])
-        fit_to_rect = dot.get_rect().fit(surface.get_rect())
-        fit_to_rect.center = surface.get_rect().center
-        scaled = pygame.transform.smoothscale(dot, fit_to_rect.size)
         if self.background_color is None:
             surface.fill((255, 255, 255, 0))
         else:
             surface.fill(self.background_color)
-        surface.blit(scaled, scaled.get_rect(center=surface.get_rect().center))
-
-    def draw_selection(self, surface, image_cache, selected):
-        """Draw selection around the slide.
-
-        :param surface: surface background should be drawn in
-        :type surface: :py:class:`pygame.Surface`
-        :param image_cache: cached (scaled image, shape) built when drawing slide
-        :type image_cache: (:py:class:`pygame.Surface`, :py:class:`pygame.Surface`)
-        :param selected: the slide is selected/focused
-        :type selected: bool
-        """
-        scaled, shape = image_cache
-        surface.fill((255, 255, 255, 0))  # Clear the current slide
-        if selected:
-            surface.blit(colorize(shape, self.selection_color), (0, 0))
+        if pressed:
+            image = self.dot_pressed_shape
+        elif selected:
+            image = self.dot_selected_shape
         else:
-            surface.blit(colorize(shape, self.slide_color), (0, 0))
-        surface.blit(scaled, scaled.get_rect(center=surface.get_rect().center))
+            image = self.dot_shape
+        surface.blit(image, image.get_rect(center=surface.get_rect().center))
 
-    def draw_slide(self, surface, image_source):
+    def draw_slide(self, surface, slide):
         """Draw a slide.
 
         :param surface: surface background should be drawn in
         :type surface: :py:class:`pygame.Surface`
-        :param image_source: source image to draw on slide
-        :type image_source: :py:class:`pygame.Surface`
+        :param slide: slide to draw
+        :type slide: :py:class:`Slide`
+
+        :return: scaled image for next blit without resize
         """
+        fit_to_rect = slide.image_source.get_rect().fit(surface.get_rect())
+        fit_to_rect.center = surface.get_rect().center
+        scaled = pygame.transform.smoothscale(slide.image_source, fit_to_rect.size)
         shape = get_roundrect_shape(surface.get_rect(), 0.2)
-        scaled = pygame.transform.smoothscale(image_source, image_source.get_rect().fit(surface.get_rect()).size)
-        surface.blit(colorize(shape, self.slide_color), (0, 0))
+        self.slide_shape = colorize(shape, self.slide_color)
+        self.slide_selected_shape = colorize(shape, self.selection_color)
+
+        surface.blit(self.slide_shape, (0, 0))
         surface.blit(scaled, scaled.get_rect(center=surface.get_rect().center))
-        return (scaled, shape)
+        return scaled
+
+    def draw_slide_state(self, surface, image, selected):
+        """Draw selection around the slide.
+
+        :param surface: surface background should be drawn in
+        :type surface: :py:class:`pygame.Surface`
+        :param image: scalled image to draw
+        :type image: :py:class:`Surface`
+        :param selected: the slide is selected/focused
+        :type selected: bool
+        """
+        surface.fill((255, 255, 255, 0))  # Clear the current slide
+        if selected:
+            surface.blit(self.slide_selected_shape, (0, 0))
+        else:
+            surface.blit(self.slide_shape, (0, 0))
+        surface.blit(image, image.get_rect(center=surface.get_rect().center))
 
     def draw_background(self, surface):
         """Draw background.

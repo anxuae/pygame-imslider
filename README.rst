@@ -188,9 +188,12 @@ A custom ``ImSliderRenderer`` can be built using following constructor :
 You can also create your own renderer. Just override ``ImSliderRenderer`` class and
 override any of the following methods:
 
-- **draw_arrow(surface, image, pressed)**: Draw an arrow.
-- **draw_dot(surface, image, pressed, selected)**: Draw a dot.
-- **draw_slide(surface, image, selected)**: Draw a slide.
+- **draw_arrow(surface, arrow)**: Draw an arrow.
+- **draw_arrow_state(surface, pressed)**: Draw arrow state.
+- **draw_dot(surface, dot)**: Draw a dot.
+- **draw_dot_state(surface, pressed, selected)**: Draw page-dot state
+- **draw_slide(surface, slide)**: Draw a slide.
+- **draw_slide_state(surface, image, selected)**: Draw slide state.
 - **draw_background(surface)**: Draw background.
 
 Getting/Setting data
@@ -201,6 +204,9 @@ Several information can be retrieved from the slider:
 .. code-block:: python
 
     slider = ImSlider(...)
+
+    # Load a sequence of image files.
+    slider.load_images(['image1.png', 'image2.png', 'image3.png'])
 
     # Get a pygame.Rect object in which the slider is included.
     slider.get_rect()

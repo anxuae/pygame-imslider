@@ -5,8 +5,9 @@ import pygame
 
 class Animation(object):
 
-    def __init__(self, duration):
+    def __init__(self, clip, duration):
         self.time = 0
+        self.clip = clip
         self.duration = duration
         self.finished = False
 
@@ -39,8 +40,8 @@ class Transpose(Animation):
     :type duration: int
     """
 
-    def __init__(self, x, y, duration):
-        super(Transpose, self).__init__(duration)
+    def __init__(self, clip, x, y, duration):
+        super(Transpose, self).__init__(clip, duration)
         self.destination = pygame.math.Vector2(x, y)
         self.velocity = None
         self.ini_position = None
@@ -68,6 +69,11 @@ class Transpose(Animation):
             new_pos.y = self.destination.y
 
         slide.set_position(*new_pos)
+        if self.clip.colliderect(slide.rect):
+            slide.visible = 1
+        else:
+            slide.visible = 0
+
         if slide.rect.topleft == self.destination:
             self.finished = True
 
@@ -84,8 +90,8 @@ class Fade(Animation):
     :type set_visibility: bool
     """
 
-    def __init__(self, to_alpha, duration, set_visibility=True):
-        super(Fade, self).__init__(duration)
+    def __init__(self, clip, to_alpha, duration, set_visibility=True):
+        super(Fade, self).__init__(clip, duration)
         assert to_alpha >= 0 and to_alpha <= 255
         self.to_alpha = to_alpha
         self.set_visibility = set_visibility

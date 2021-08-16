@@ -85,6 +85,7 @@ class ImSlider(object):
             self.sprites.add(arrow, layer=1)
 
         self.set_size(*size)
+        self.trace = 0
 
     @property
     def per_page(self):
@@ -250,6 +251,7 @@ class ImSlider(object):
         # Setup eraser
         if not self.eraser or force:
             self.set_eraser(surface)
+
         cProfile.profiler.enable()
         rects = self.sprites.draw(surface)
         rects += self.layout.draw(surface)
@@ -378,6 +380,7 @@ class ImSlider(object):
     def on_next(self):
         """Go to next slide.
         """
+        self.trace = 1
         if self.stype == STYPE_LOOP or self.rewind:
             # Loop, don't check limites
             self.layout.set_selection(step=self.per_move)

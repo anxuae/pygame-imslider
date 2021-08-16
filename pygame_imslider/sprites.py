@@ -98,7 +98,7 @@ class Arrow(pygame.sprite.DirtySprite):
         if self.rect.size != (width, height):
             self.rect.size = (width, height)
             self.image = pygame.Surface(self.rect.size, pygame.SRCALPHA, 32)
-            self.renderer.draw_arrow(self.image, self.image_source, self.pressed)
+            self.renderer.draw_arrow(self.image, self)
             self.dirty = 1
 
     def set_pressed(self, state):
@@ -109,7 +109,7 @@ class Arrow(pygame.sprite.DirtySprite):
         """
         if self.pressed != int(state):
             self.pressed = int(state)
-            self.renderer.draw_arrow(self.image, self.image_source, self.pressed)
+            self.renderer.draw_arrow_state(self.image, self.pressed)
             self.dirty = 1
 
     def update(self, events, dt):
@@ -189,7 +189,7 @@ class Dot(pygame.sprite.DirtySprite):
         if self.rect.size != (width, height):
             self.rect.size = (width, height)
             self.image = pygame.Surface(self.rect.size, pygame.SRCALPHA, 32)
-            self.renderer.draw_dot(self.image, self.image_source, self.pressed, self.selected)
+            self.renderer.draw_dot(self.image, self)
             self.dirty = 1
 
     def set_selected(self, state):
@@ -200,7 +200,7 @@ class Dot(pygame.sprite.DirtySprite):
         """
         if self.selected != int(state):
             self.selected = int(state)
-            self.renderer.draw_dot(self.image, self.image_source, self.pressed, self.selected)
+            self.renderer.draw_dot_state(self.image, self.pressed, self.selected)
             self.dirty = 1
 
     def set_pressed(self, state):
@@ -211,7 +211,7 @@ class Dot(pygame.sprite.DirtySprite):
         """
         if self.pressed != int(state):
             self.pressed = int(state)
-            self.renderer.draw_dot(self.image, self.image_source, self.pressed, self.selected)
+            self.renderer.draw_dot_state(self.image, self.pressed, self.selected)
             self.dirty = 1
 
     def update(self, events, dt):
@@ -269,7 +269,7 @@ class Slide(pygame.sprite.DirtySprite):
             self._renderer = renderer
             self._selected = 0
             self._image_path = image_path
-            self._image_cache = None
+            self._image_scaled = None
             if load:
                 self._image_source = pygame.image.load(image_path).convert_alpha()
             else:
@@ -308,10 +308,10 @@ class Slide(pygame.sprite.DirtySprite):
         return self._image_source
 
     @property
-    def image_cache(self):
+    def image_scaled(self):
         if self.parent:
-            return self.parent.image_cache
-        return self._image_cache
+            return self.parent.image_scaled
+        return self._image_scaled
 
     def clone(self):
         """Return a clone of the slide. A clone has the same attributes than its parent
@@ -348,7 +348,7 @@ class Slide(pygame.sprite.DirtySprite):
         if self.rect.size != (width, height):
             self.rect.size = (width, height)
             self.image = pygame.Surface(self.rect.size, pygame.SRCALPHA, 32)
-            self._image_cache = self.renderer.draw_slide(self.image, self.image_source)
+            self._image_scaled = self.renderer.draw_slide(self.image, self)
             self.dirty = 1
 
     def set_selected(self, state):
@@ -360,7 +360,7 @@ class Slide(pygame.sprite.DirtySprite):
         """
         if self._selected != int(state):
             self._selected = int(state)
-            self.renderer.draw_selection(self.image, self.image_cache, self.selected)
+            self.renderer.draw_slide_state(self.image, self.image_scaled, self.selected)
             self.dirty = 1
 
     def set_alpha(self, alpha):

@@ -128,7 +128,7 @@ class SlidesLayout(pygame.sprite.LayeredDirty):
 
         for slide in self.slides:
             pos = slide.rect.x + step * (slide.rect.width + self.padding)
-            slide.add_animation(anim.Transpose(pos, slide.rect.y, duration))
+            slide.add_animation(anim.Transpose(self.get_clip(), pos, slide.rect.y, duration))
 
     def got_to_selection_backward(self, duration, center=False):
         """Move backward all slides to ensure that selection is visible.
@@ -155,7 +155,7 @@ class SlidesLayout(pygame.sprite.LayeredDirty):
 
         for slide in self.slides:
             pos = slide.rect.x + step * (slide.rect.width + self.padding)
-            slide.add_animation(anim.Transpose(pos, slide.rect.y, duration))
+            slide.add_animation(anim.Transpose(self.get_clip(), pos, slide.rect.y, duration))
 
 
 class SlidesLayoutLoop(SlidesLayout):
@@ -216,7 +216,7 @@ class SlidesLayoutLoop(SlidesLayout):
         # Add slide animations
         for slide in self.get_x_ordered_slides():
             pos = slide.rect.x + step * (slide.rect.width + self.padding)
-            slide.add_animation(anim.Transpose(pos, slide.rect.y, duration))
+            slide.add_animation(anim.Transpose(self.get_clip(), pos, slide.rect.y, duration))
 
     def got_to_selection_backward(self, duration, center=False):
         # Remove clones and replace it with hidden parent
@@ -263,7 +263,7 @@ class SlidesLayoutLoop(SlidesLayout):
         # Add slide animations
         for slide in self.get_x_ordered_slides():
             pos = slide.rect.x + step * (slide.rect.width + self.padding)
-            slide.add_animation(anim.Transpose(pos, slide.rect.y, duration))
+            slide.add_animation(anim.Transpose(self.get_clip(), pos, slide.rect.y, duration))
 
 
 class SlidesLayoutFade(SlidesLayout):
@@ -288,11 +288,11 @@ class SlidesLayoutFade(SlidesLayout):
 
         if current == self.slides[-1]:
             selected.set_alpha(255)
-            current.add_animation(anim.Fade(0, duration))
+            current.add_animation(anim.Fade(self.get_clip(), 0, duration))
         else:
-            current.add_animation(anim.Exit(duration))
+            current.add_animation(anim.Exit(self.get_clip(), duration))
             selected.set_alpha(0)
-            selected.add_animation(anim.Fade(255, duration, False))
+            selected.add_animation(anim.Fade(self.get_clip(), 255, duration, False))
 
     def got_to_selection_backward(self, duration, center=False):
         current = self.get_visible_slides()[0]
@@ -303,9 +303,9 @@ class SlidesLayoutFade(SlidesLayout):
             selected.visible = 1
 
         if current == self.slides[0]:
-            current.add_animation(anim.Exit(duration))
+            current.add_animation(anim.Exit(self.get_clip(), duration))
             selected.set_alpha(0)
-            selected.add_animation(anim.Fade(255, duration, False))
+            selected.add_animation(anim.Fade(self.get_clip(), 255, duration, False))
         else:
             selected.set_alpha(255)
-            current.add_animation(anim.Fade(0, duration))
+            current.add_animation(anim.Fade(self.get_clip(), 0, duration))
