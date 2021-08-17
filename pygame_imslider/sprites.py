@@ -335,7 +335,8 @@ class Slide(pygame.sprite.DirtySprite):
         """
         if self.rect.topleft != (x, y):
             self.rect.topleft = (x, y)
-            self.dirty = 1
+            if self.visible:
+                self.dirty = 1
 
     def set_size(self, width, height):
         """Set the slide size.
@@ -349,7 +350,8 @@ class Slide(pygame.sprite.DirtySprite):
             self.rect.size = (width, height)
             self.image = pygame.Surface(self.rect.size, pygame.SRCALPHA, 32)
             self._image_scaled = self.renderer.draw_slide(self.image, self)
-            self.dirty = 1
+            if self.visible:
+                self.dirty = 1
 
     def set_selected(self, state):
         """Set the slide selection state (1 for selected else 0)
@@ -361,14 +363,16 @@ class Slide(pygame.sprite.DirtySprite):
         if self._selected != int(state):
             self._selected = int(state)
             self.renderer.draw_slide_state(self.image, self.image_scaled, self.selected)
-            self.dirty = 1
+            if self.visible:
+                self.dirty = 1
 
     def set_alpha(self, alpha):
         """Set slide transparency.
         """
         if alpha != self.image.get_alpha():
             self.image.set_alpha(alpha)
-            self.dirty = 1
+            if self.visible:
+                self.dirty = 1
 
     def add_animation(self, animation):
         """Add a new animation. Animations are apply according to the add

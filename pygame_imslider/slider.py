@@ -83,6 +83,12 @@ class ImSlider(object):
 
         self.set_size(*size)
 
+        # On Raspberry Pi, the time to update dirty sprites is long (120-180ms
+        # tested), increasing the treshold permits to avoid blitting full screen
+        # at each draw() call.
+        self.sprites.set_timing_treshold(200)
+        self.layout.set_timing_treshold(200)
+
     @property
     def per_page(self):
         return self._per_page if self.stype != STYPE_FADE else 1

@@ -70,9 +70,11 @@ class Transpose(Animation):
 
         slide.set_position(*new_pos)
         if self.clip.colliderect(slide.rect):
-            slide.visible = 1
+            if not slide.visible:
+                slide.visible = 1
         else:
-            slide.visible = 0
+            if slide.visible:
+                slide.visible = 0
 
         if slide.rect.topleft == self.destination:
             self.finished = True
@@ -101,7 +103,7 @@ class Fade(Animation):
     def _apply(self, slide):
         if self.duration <= 0:
             slide.set_alpha(self.to_alpha)
-            if self.set_visibility:
+            if self.set_visibility and slide.visible:
                 slide.visible = 0
             self.finished = True
             return
@@ -120,7 +122,7 @@ class Fade(Animation):
 
         slide.set_alpha(new_alpha)
         if new_alpha == self.to_alpha:
-            if self.set_visibility:
+            if self.set_visibility and slide.visible:
                 slide.visible = 0
             self.finished = True
 
@@ -135,5 +137,6 @@ class Exit(Animation):
 
     def _apply(self, slide):
         if self.time >= self.duration:
-            slide.visible = 0
+            if slide.visible:
+                slide.visible = 0
             self.finished = True
