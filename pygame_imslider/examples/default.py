@@ -9,6 +9,7 @@ import cProfile, pstats
 import pygame
 import pygame_imslider as imslider
 
+PROFILER = cProfile.Profile()
 HERE = osp.dirname(osp.abspath(__file__))
 
 
@@ -43,6 +44,7 @@ def main(test=False, images_nbr=None, parameters={}, resize=False):
     clock = pygame.time.Clock()
 
     # Main loop
+    PROFILER.enable()
     while True:
         clock.tick(100)  # Ensure not exceed 100 FPS
 
@@ -51,9 +53,9 @@ def main(test=False, images_nbr=None, parameters={}, resize=False):
         for event in events:
             if event.type == pygame.QUIT:
                 print("Average FPS: ", clock.get_fps())
-                if hasattr(cProfile, 'profiler'):
-                    stats = pstats.Stats(cProfile.profiler).sort_stats('cumtime')
-                    stats.print_stats()
+                stats = pstats.Stats(PROFILER).sort_stats('cumtime')
+                stats.print_stats()
+                PROFILER.disable()
                 exit()
 
         slider.update(events)
@@ -64,6 +66,9 @@ def main(test=False, images_nbr=None, parameters={}, resize=False):
 
         # At first loop returns
         if test:
+            stats = pstats.Stats(PROFILER).sort_stats('cumtime')
+            stats.print_stats()
+            PROFILER.disable()
             break
 
 

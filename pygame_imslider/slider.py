@@ -22,9 +22,6 @@ STYPE_LOOP = 'loop'
 # Change slides with fade transition
 STYPE_FADE = 'fade'
 
-import cProfile, pstats
-cProfile.profiler = cProfile.Profile()
-
 
 class ImSlider(object):
 
@@ -85,7 +82,6 @@ class ImSlider(object):
             self.sprites.add(arrow, layer=1)
 
         self.set_size(*size)
-        self.trace = 0
 
     @property
     def per_page(self):
@@ -252,10 +248,8 @@ class ImSlider(object):
         if not self.eraser or force:
             self.set_eraser(surface)
 
-        cProfile.profiler.enable()
         rects = self.sprites.draw(surface)
         rects += self.layout.draw(surface)
-        cProfile.profiler.disable()
 
         if force:
             self.sprites.repaint_rect(self.background.rect)
@@ -380,7 +374,6 @@ class ImSlider(object):
     def on_next(self):
         """Go to next slide.
         """
-        self.trace = 1
         if self.stype == STYPE_LOOP or self.rewind:
             # Loop, don't check limites
             self.layout.set_selection(step=self.per_move)
