@@ -185,6 +185,8 @@ class ImSlider(object):
         """Set the current index."""
         assert 0 <= index < len(self.layout.slides), "Invalid index '{}'".format(index)
         current = self.layout.selection
+        if current == index:
+            return
         self.layout.set_selection(pos=index)
         if current < index:
             self.layout.got_to_selection_forward(self.speed, self.focus == 'center')
