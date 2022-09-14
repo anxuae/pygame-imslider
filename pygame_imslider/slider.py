@@ -107,8 +107,8 @@ class ImSlider(object):
         """
         size = self.get_rect().size
         self.layout.empty()
-        for path in images:
-            self.layout.add_slide(Slide(path, self.renderer, not lazy))
+        for image in images:
+            self.layout.add_slide(Slide(image, self.renderer, not lazy))
         self.layout.set_position(self.background.rect.x + self.arrows[0].rect.width, self.background.rect.y)
         self.layout.set_size(size[0] - 2 * self.arrows[0].rect.width, size[1])
         self.layout.set_selection(pos=0)
@@ -130,12 +130,12 @@ class ImSlider(object):
         """Setup pagination indication (one dot per page).
         """
         nbr_pages = int(math.ceil(len(self.layout.slides) / self.per_page))
-        x_margin = 5
-        x = self.background.rect.centerx - (nbr_pages * self.layout.padding + (nbr_pages - 1) * x_margin) // 2
         y_margin = 4
         y = self.background.rect.bottom - self.layout.padding + y_margin
         dot_radius = self.layout.padding - 2 * y_margin
         dots = self.sprites.get_sprites_from_layer(2)
+        x_margin = 5
+        x = self.background.rect.centerx - (dot_radius * nbr_pages + x_margin * (nbr_pages - 1)) // 2
 
         # Update size of existing dots
         for dot in dots:
@@ -189,9 +189,9 @@ class ImSlider(object):
             return
         self.layout.set_selection(pos=index)
         if current < index:
-            self.layout.got_to_selection_forward(self.speed, self.focus == 'center')
+            self.layout.go_to_selection_forward(self.speed, self.focus == 'center')
         else:
-            self.layout.got_to_selection_backward(self.speed, self.focus == 'center')
+            self.layout.go_to_selection_backward(self.speed, self.focus == 'center')
         self.update_arrows()
         self.update_pages()
         if self.callback:
@@ -364,15 +364,15 @@ class ImSlider(object):
         if self.stype == STYPE_LOOP or self.rewind:
             # Loop, don't check limites
             self.layout.set_selection(step=-self.per_move)
-            self.layout.got_to_selection_backward(self.speed, self.focus == 'center')
+            self.layout.go_to_selection_backward(self.speed, self.focus == 'center')
         elif self.layout.selection - self.per_move >= 0:
             # Move to given slide
             self.layout.set_selection(step=-self.per_move)
-            self.layout.got_to_selection_backward(self.speed, self.focus == 'center')
+            self.layout.go_to_selection_backward(self.speed, self.focus == 'center')
         elif self.layout.selection != 0:
             # Go to the first slide
             self.layout.set_selection(pos=0)
-            self.layout.got_to_selection_backward(self.speed, self.focus == 'center')
+            self.layout.go_to_selection_backward(self.speed, self.focus == 'center')
 
         self.update_arrows()
         self.update_pages()
@@ -385,15 +385,15 @@ class ImSlider(object):
         if self.stype == STYPE_LOOP or self.rewind:
             # Loop, don't check limites
             self.layout.set_selection(step=self.per_move)
-            self.layout.got_to_selection_forward(self.speed, self.focus == 'center')
+            self.layout.go_to_selection_forward(self.speed, self.focus == 'center')
         elif self.layout.selection + self.per_move < len(self.layout.slides):
             # Move to given slide
             self.layout.set_selection(step=self.per_move)
-            self.layout.got_to_selection_forward(self.speed, self.focus == 'center')
+            self.layout.go_to_selection_forward(self.speed, self.focus == 'center')
         elif self.layout.selection != self.layout.last_idx:
             # Go to the last slide
             self.layout.set_selection(pos=self.layout.last_idx)
-            self.layout.got_to_selection_forward(self.speed, self.focus == 'center')
+            self.layout.go_to_selection_forward(self.speed, self.focus == 'center')
 
         self.update_arrows()
         self.update_pages()

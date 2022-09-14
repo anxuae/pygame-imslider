@@ -252,10 +252,10 @@ class Slide(pygame.sprite.DirtySprite):
         If set to 1, the key is selected.
     """
 
-    def __init__(self, image_path, renderer, load=True, parent=None):
+    def __init__(self, image, renderer, load=True, parent=None):
         """
-        :param image_path: path to the image displayed in the slide
-        :type image_path: str
+        :param image: path to image or Pygame image displayed in the slide
+        :type image: str or object
         :param renderer: render used to render the arrow
         :type renderer: :py:class:`SliderRenderer`
         :param load: load image when initialize class
@@ -268,9 +268,14 @@ class Slide(pygame.sprite.DirtySprite):
         if not parent:
             self._renderer = renderer
             self._selected = 0
-            self._image_path = image_path
+            if isinstance(image, str):
+                self._image_path = image
+            else:
+                self._image_path = ''
+                self._image_source = image
             if load:
-                self._image_source = pygame.image.load(image_path).convert_alpha()
+                if self._image_path:
+                    self._image_source = pygame.image.load(self._image_path).convert_alpha()
             else:
                 raise NotImplementedError
 

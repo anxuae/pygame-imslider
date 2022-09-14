@@ -207,7 +207,10 @@ class ImSliderRenderer(object):
         slide.shape = colorize(shape, self.slide_color)
         slide.shape_selected = colorize(shape, self.selection_color)
 
-        surface.blit(slide.shape, (0, 0))
+        if slide.selected:
+            surface.blit(slide.shape_selected, (0, 0))
+        else:
+            surface.blit(slide.shape, (0, 0))
         surface.blit(slide.scaled, slide.scaled.get_rect(center=surface.get_rect().center))
 
     def draw_slide_state(self, surface, slide):

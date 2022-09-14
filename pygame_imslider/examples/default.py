@@ -5,7 +5,8 @@
 
 import os
 import os.path as osp
-import cProfile, pstats
+import cProfile
+import pstats
 import pygame
 import pygame_imslider as imslider
 
@@ -73,4 +74,4 @@ def main(test=False, images_nbr=None, parameters={}, resize=False):
 
 
 if __name__ == '__main__':
-    main(False, 4)
+    main(False, 4, resize=True)
