@@ -91,7 +91,8 @@ class ImSliderRenderer(object):
                  slide_color,
                  selection_color,
                  selection_page_color,
-                 background_color):
+                 background_color,
+                 slide_padding=10):
         """VKeyboardStyle default constructor.
 
         Some parameters take a list of color tuples, one per state.
@@ -103,6 +104,7 @@ class ImSliderRenderer(object):
         :param selection_color: RGB tuple for selected image color
         :param selection_page_color: RGB tuple for selected page color
         :param background_color: RGB tuple for background color
+        :param slide_padding: border between slide and image
         """
         self.arrow_color = arrow_color
         self.dot_color = dot_color
@@ -110,6 +112,7 @@ class ImSliderRenderer(object):
         self.selection_color = selection_color
         self.selection_page_color = selection_page_color
         self.background_color = background_color
+        self.slide_padding = slide_padding
 
     def draw_arrow(self, surface, arrow):
         """Draw an arrow.
@@ -201,11 +204,15 @@ class ImSliderRenderer(object):
         :return: scaled image for next blit without resize
         """
         fit_to_rect = slide.image_source.get_rect().fit(surface.get_rect())
+        fit_to_rect = fit_to_rect.inflate(-self.slide_padding, -self.slide_padding)
         fit_to_rect.center = surface.get_rect().center
         slide.scaled = pygame.transform.smoothscale(slide.image_source, fit_to_rect.size)
         shape = get_roundrect_shape(surface.get_rect(), 0.2)
-        slide.shape = colorize(shape, self.slide_color)
         slide.shape_selected = colorize(shape, self.selection_color)
+        if self.slide_color is not None:
+            slide.shape = colorize(shape, self.slide_color)
+        else:
+            slide.shape = shape
 
         if slide.selected:
             surface.blit(slide.shape_selected, (0, 0))

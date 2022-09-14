@@ -37,7 +37,7 @@ class SlidesLayout(pygame.sprite.LayeredDirty):
         width, height = self.rect.size
         slide_width = (width - ((1 + self.per_page) * self.padding)) // self.per_page
         slide_height = height - 2 * self.padding
-        pos = self.padding
+        pos = self.padding - self.selection * (slide_width + self.padding)
         for slide in self.slides:
             slide.set_position(self.rect.x + pos, self.rect.y + self.padding)
             slide.set_size(slide_width, slide_height)
@@ -69,7 +69,7 @@ class SlidesLayout(pygame.sprite.LayeredDirty):
     def set_selection(self, pos=None, step=None):
         """Change selected slide to next one.
 
-        :param pos: got to the
+        :param pos: go to the given position
         :type pos: int
         :param step: how many slides to move the selection
         :type step: int
@@ -273,7 +273,7 @@ class SlidesLayoutFade(SlidesLayout):
             width, height = self.rect.size
             slide.set_position(self.rect.x + self.padding, self.rect.y + self.padding)
             slide.set_size(width - 2 * self.padding, height - 2 * self.padding)
-            if slide == self.slides[0]:
+            if slide == self.slides[self.selection]:
                 slide.visible = 1
             else:
                 slide.visible = 0

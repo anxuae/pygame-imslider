@@ -36,6 +36,7 @@ def main(test=False, images_nbr=None, parameters={}, resize=False):
         screen = pygame.display.set_mode((800, 300), pygame.RESIZABLE)
     else:
         screen = pygame.display.set_mode((800, 300))
+
     screen.fill((178, 123, 200))
 
     # Create keyboard
@@ -60,6 +61,7 @@ def main(test=False, images_nbr=None, parameters={}, resize=False):
                 exit()
 
         slider.update(events)
+
         rects = slider.draw(screen)
 
         # Flip only the updated area

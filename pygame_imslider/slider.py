@@ -197,6 +197,16 @@ class ImSlider(object):
         if self.callback:
             self.callback(self.layout.selection)
 
+    def set_position(self, x, y):
+        """Set the background position.
+
+        :param x: position x
+        :type x: int
+        :param y: position y
+        :type y: int
+        """
+        self.background.set_position(x, y)
+
     def set_size(self, width, height):
         """Resize the images slider according to the given size.
 
@@ -205,17 +215,17 @@ class ImSlider(object):
         :param height: slider height
         :type height: int
         """
-        self.background.set_position(0, 0)
         self.background.set_size(width, height)
 
-        arrow_width = int(width * 0.1 / 2)
+        arrow_width = int(width * 0.1)
         # Left Arrow
         self.arrows[0].set_size(arrow_width, 2 * arrow_width)
-        self.arrows[0].set_position(0, self.background.rect.height // 2 - self.arrows[0].rect.height // 2)
+        self.arrows[0].set_position(self.background.rect.x,
+                                    self.background.rect.centery - self.arrows[0].rect.height // 2)
         # Right Arrow
         self.arrows[1].set_size(arrow_width, 2 * arrow_width)
-        self.arrows[1].set_position(self.background.rect.width - self.arrows[1].rect.width,
-                                    self.background.rect.height // 2 - self.arrows[1].rect.height // 2)
+        self.arrows[1].set_position(self.background.rect.right - self.arrows[1].rect.width,
+                                    self.background.rect.centery - self.arrows[0].rect.height // 2)
 
         self.layout.set_position(self.background.rect.x + arrow_width, self.background.rect.y)
         self.layout.set_size(width - 2 * arrow_width, height)
@@ -226,6 +236,7 @@ class ImSlider(object):
             # Changing the clipping area will force update of all
             # sprites without using "dirty mechanism"
             self.sprites.set_clip(self.background.rect)
+            self.set_eraser(self.background.image)
 
     def draw(self, surface=None, force=False):
         """Draw the image slider.
@@ -234,31 +245,19 @@ class ImSlider(object):
         main application. It uses DirtySprite to update only parts
         of the screen that need to be refreshed.
 
-        The first call to this method will setup the "eraser" surface that
-        will be used to redraw dirty parts of the screen.
-
         The `force` parameter shall be used if the surface has been redrawn:
-        it reset the eraser and redraw all sprites.
+        it redraws all sprites.
 
         :param surface: surface the slider will be displayed at
+        :type surface: object
         :param force: force the drawing of the entire surface (time consuming)
         :type force: bool
 
         :return: list of updated area
         :rtype: list
         """
-        # Check if surface has been resized
-        if self.eraser and surface.get_rect() != self.eraser.get_rect():
-            force = True  # To force creating new eraser
-            self.set_size(*surface.get_size())
-
-        # Setup eraser
-        if not self.eraser or force:
-            self.set_eraser(surface)
-
         rects = self.sprites.draw(surface)
         rects += self.layout.draw(surface)
-
         if force:
             self.sprites.repaint_rect(self.background.rect)
             self.layout.repaint_rect(self.background.rect)
