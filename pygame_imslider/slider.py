@@ -256,11 +256,11 @@ class ImSlider(object):
         :return: list of updated area
         :rtype: list
         """
-        rects = self.sprites.draw(surface)
-        rects += self.layout.draw(surface)
         if force:
             self.sprites.repaint_rect(self.background.rect)
             self.layout.repaint_rect(self.background.rect)
+        rects = self.sprites.draw(surface)
+        rects += self.layout.draw(surface)
         return rects
 
     def update(self, events):

@@ -27,8 +27,8 @@ class Background(pygame.sprite.DirtySprite):
         :param y: position y
         :type y: int
         """
-        if self.rect.topleft != (x, y):
-            self.rect.topleft = (x, y)
+        if self.rect.topleft != (int(x), int(y)):
+            self.rect.topleft = (int(x), int(y))
             self.dirty = 1
 
     def set_size(self, width, height):
@@ -39,8 +39,8 @@ class Background(pygame.sprite.DirtySprite):
         :param height: background height
         :type height: int
         """
-        if self.rect.size != (width, height):
-            self.rect.size = (width, height)
+        if self.rect.size != (int(width), int(height)):
+            self.rect.size = (int(width), int(height))
             self.image = pygame.Surface((width, height), pygame.SRCALPHA, 32)
             self.renderer.draw_background(self.image)
             self.dirty = 1
@@ -83,8 +83,8 @@ class Arrow(pygame.sprite.DirtySprite):
         :param y: position y
         :type y: int
         """
-        if self.rect.topleft != (x, y):
-            self.rect.topleft = (x, y)
+        if self.rect.topleft != (int(x), int(y)):
+            self.rect.topleft = (int(x), int(y))
             self.dirty = 1
 
     def set_size(self, width, height):
@@ -95,8 +95,8 @@ class Arrow(pygame.sprite.DirtySprite):
         :param height: arrow height
         :type height: int
         """
-        if self.rect.size != (width, height):
-            self.rect.size = (width, height)
+        if self.rect.size != (int(width), int(height)):
+            self.rect.size = (int(width), int(height))
             self.image = pygame.Surface(self.rect.size, pygame.SRCALPHA, 32)
             self.renderer.draw_arrow(self.image, self)
             self.dirty = 1
@@ -174,8 +174,8 @@ class Dot(pygame.sprite.DirtySprite):
         :param y: position y
         :type y: int
         """
-        if self.rect.topleft != (x, y):
-            self.rect.topleft = (x, y)
+        if self.rect.topleft != (int(x), int(y)):
+            self.rect.topleft = (int(x), int(y))
             self.dirty = 1
 
     def set_size(self, width, height):
@@ -186,8 +186,8 @@ class Dot(pygame.sprite.DirtySprite):
         :param height: arrow height
         :type height: int
         """
-        if self.rect.size != (width, height):
-            self.rect.size = (width, height)
+        if self.rect.size != (int(width), int(height)):
+            self.rect.size = (int(width), int(height))
             self.image = pygame.Surface(self.rect.size, pygame.SRCALPHA, 32)
             self.renderer.draw_dot(self.image, self)
             self.dirty = 1
@@ -285,7 +285,7 @@ class Slide(pygame.sprite.DirtySprite):
         self.animations = []
 
     def __repr__(self):
-        return "Slide({}, clone={})".format(self.image_path, self.parent is not None)
+        return "Slide(path='{}', clone={})".format(self.image_path, self.parent is not None)
 
     @property
     def renderer(self):
@@ -331,8 +331,8 @@ class Slide(pygame.sprite.DirtySprite):
         :param y: position y
         :type y: int
         """
-        if self.rect.topleft != (x, y):
-            self.rect.topleft = (x, y)
+        if self.rect.topleft != (int(x), int(y)):
+            self.rect.topleft = (int(x), int(y))
             if self.visible:
                 self.dirty = 1
 
@@ -344,8 +344,8 @@ class Slide(pygame.sprite.DirtySprite):
         :param height: slide height
         :type height: int
         """
-        if self.rect.size != (width, height):
-            self.rect.size = (width, height)
+        if self.rect.size != (int(width), int(height)):
+            self.rect.size = (int(width), int(height))
             self.image = pygame.Surface(self.rect.size, pygame.SRCALPHA, 32)
             self.renderer.draw_slide(self.image, self)
             if self.visible:
