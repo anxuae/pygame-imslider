@@ -55,6 +55,7 @@ class ImSlider(object):
                  rewind=False, speed=0.4, renderer=ImSliderRenderer.DEFAULT, callback=None):
         self._per_page = per_page
         self._per_move = per_move
+        self.eraser = None
         self.clock = pygame.time.Clock()
         self.stype = stype
         self.focus = focus
@@ -121,8 +122,9 @@ class ImSlider(object):
     def set_eraser(self, surface):
         """Setup the surface used to hide/clear the slider.
         """
-        self.sprites.clear(None, surface)
-        self.layout.clear(None, surface)
+        self.eraser = surface.copy()
+        self.sprites.clear(None, self.eraser)
+        self.layout.clear(None, self.eraser)
 
     def setup_pagination(self):
         """Setup pagination indication (one dot per page).
@@ -257,7 +259,6 @@ class ImSlider(object):
             self.sprites.repaint_rect(self.background.rect)
             self.layout.repaint_rect(self.background.rect)
         rects = self.sprites.draw(surface)
-        self.set_eraser(self.background.image)
         rects += self.layout.draw(surface)
         return rects
 
@@ -268,6 +269,7 @@ class ImSlider(object):
         :type events: list
         """
         dt = self.clock.tick() / 1000  # Amount of seconds between each loop.
+        update_eraser = self.background.image is None
         self.sprites.update(events, dt)
 
         if self.layout.is_animated():
@@ -324,6 +326,16 @@ class ImSlider(object):
 
         # Update will rebuild sprites images
         self.layout.update(events, dt)
+
+        # Update eraser if no externaly one defined
+        if update_eraser and not self.eraser:
+            width, height = self.background.rect.size
+            # Handle absolute position of the sprites
+            eraser = pygame.Surface((self.background.rect.x + width,
+                                     self.background.rect.y + height), pygame.SRCALPHA, 32)
+            eraser.blit(self.background.image, self.background.rect.topleft)
+            self.sprites.clear(None, eraser)
+            self.layout.clear(None, eraser)
 
     def update_arrows(self):
         """Update arrows visibility. The visibility is changed only if necessary
