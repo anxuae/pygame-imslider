@@ -109,8 +109,8 @@ class Fade(Animation):
             return
 
         if not self.velocity:
-            self.ini_alpha = slide.image.get_alpha()
-            self.velocity = (self.to_alpha - slide.image.get_alpha()) / self.duration
+            self.ini_alpha = slide.alpha
+            self.velocity = (self.to_alpha - slide.alpha) / self.duration
 
         new_alpha = int(self.ini_alpha + self.velocity * self.time)
 

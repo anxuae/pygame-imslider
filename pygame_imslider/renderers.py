@@ -215,26 +215,13 @@ class ImSliderRenderer(object):
             slide.shape = surface.copy()
             slide.shape.fill((0, 0, 0, 0))
 
+        surface.fill((0, 0, 0, 0))  # Clear the current slide
         if slide.selected:
             surface.blit(slide.shape_selected, (0, 0))
         else:
             surface.blit(slide.shape, (0, 0))
         surface.blit(slide.scaled, slide.scaled.get_rect(center=surface.get_rect().center))
-
-    def draw_slide_state(self, surface, slide):
-        """Draw selection around the slide.
-
-        :param surface: surface background should be drawn in
-        :type surface: :py:class:`pygame.Surface`
-        :param slide: slide to draw
-        :type slide: :py:class:`Slide`
-        """
-        surface.fill((255, 255, 255, 0))  # Clear the current slide
-        if slide.selected:
-            surface.blit(slide.shape_selected, (0, 0))
-        else:
-            surface.blit(slide.shape, (0, 0))
-        surface.blit(slide.scaled, slide.scaled.get_rect(center=surface.get_rect().center))
+        surface.set_alpha(slide.alpha)
 
     def draw_background(self, surface):
         """Draw background.

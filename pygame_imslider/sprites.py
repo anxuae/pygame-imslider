@@ -16,8 +16,7 @@ class Background(pygame.sprite.DirtySprite):
         super(Background, self).__init__()
         self.renderer = renderer
         self.rect = pygame.Rect((0, 0), (10, 10))
-        self.image = pygame.Surface(self.rect.size, pygame.SRCALPHA, 32)
-        self.renderer.draw_background(self.image)
+        self.image = None
 
     def set_position(self, x, y):
         """Set the background position.
@@ -41,9 +40,20 @@ class Background(pygame.sprite.DirtySprite):
         """
         if self.rect.size != (int(width), int(height)):
             self.rect.size = (int(width), int(height))
-            self.image = pygame.Surface((width, height), pygame.SRCALPHA, 32)
-            self.renderer.draw_background(self.image)
+            self.image = None  # Force rendering
             self.dirty = 1
+
+    def update(self, events, dt):
+        """Update slide according to current animations.
+
+        :param events: list of events to process.
+        :type events: list
+        :param dt: elapsed time since last call
+        :type dt: int
+        """
+        if self.image is None:
+            self.image = pygame.Surface(self.rect.size, pygame.SRCALPHA, 32)
+            self.renderer.draw_background(self.image)
 
 
 class Arrow(pygame.sprite.DirtySprite):
@@ -269,6 +279,7 @@ class Slide(pygame.sprite.DirtySprite):
             self._renderer = renderer
             self._selected = 0
             self._index = 0
+            self._alpha = 255
             if isinstance(image, str):
                 self._image_path = image
             else:
@@ -282,7 +293,7 @@ class Slide(pygame.sprite.DirtySprite):
 
         # Attributes than can differe from parents
         self.rect = pygame.Rect((0, 0), (10, 10))
-        self.image = pygame.Surface(self.rect.size, pygame.SRCALPHA, 32)
+        self.image = None
         self.animations = []
 
     def __repr__(self):
@@ -305,6 +316,12 @@ class Slide(pygame.sprite.DirtySprite):
         if self.parent:
             return self.parent.selected
         return self._selected
+
+    @property
+    def alpha(self):
+        if self.parent:
+            return self.parent.alpha
+        return self._alpha
 
     @property
     def image_path(self):
@@ -353,8 +370,7 @@ class Slide(pygame.sprite.DirtySprite):
         """
         if self.rect.size != (int(width), int(height)):
             self.rect.size = (int(width), int(height))
-            self.image = pygame.Surface(self.rect.size, pygame.SRCALPHA, 32)
-            self.renderer.draw_slide(self.image, self)
+            self.image = None  # Force rendering
             if self.visible:
                 self.dirty = 1
 
@@ -376,14 +392,15 @@ class Slide(pygame.sprite.DirtySprite):
         """
         if self._selected != int(state):
             self._selected = int(state)
-            self.renderer.draw_slide_state(self.image, self)
+            self.image = None  # Force rendering
             if self.visible:
                 self.dirty = 1
 
     def set_alpha(self, alpha):
         """Set slide transparency.
         """
-        if alpha != self.image.get_alpha():
+        if self._alpha != int(alpha):
+            self._alpha = int(alpha)
             self.image.set_alpha(alpha)
             if self.visible:
                 self.dirty = 1
@@ -407,6 +424,10 @@ class Slide(pygame.sprite.DirtySprite):
         :param dt: elapsed time since last call
         :type dt: int
         """
+        if self.image is None:
+            self.image = pygame.Surface(self.rect.size, pygame.SRCALPHA, 32)
+            self.renderer.draw_slide(self.image, self)
+
         for animation in self.animations[:]:
             animation(self, dt)
             if animation.finished:

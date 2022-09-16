@@ -60,7 +60,6 @@ class ImSlider(object):
         self.focus = focus
         self.rewind = rewind
         self.speed = speed
-        self.eraser = None
         if stype == STYPE_LOOP:
             self.layout = SlidesLayoutLoop(self.per_page, self.focus)
         elif stype == STYPE_FADE:
@@ -122,9 +121,8 @@ class ImSlider(object):
     def set_eraser(self, surface):
         """Setup the surface used to hide/clear the slider.
         """
-        self.eraser = surface.copy()
-        self.sprites.clear(surface, self.eraser)
-        self.layout.clear(surface, self.background.image)
+        self.sprites.clear(None, surface)
+        self.layout.clear(None, surface)
 
     def setup_pagination(self):
         """Setup pagination indication (one dot per page).
@@ -237,8 +235,6 @@ class ImSlider(object):
             # sprites without using "dirty mechanism"
             self.sprites.set_clip(self.background.rect)
 
-        self.set_eraser(self.background.image)
-
     def draw(self, surface=None, force=False):
         """Draw the image slider.
 
@@ -261,6 +257,7 @@ class ImSlider(object):
             self.sprites.repaint_rect(self.background.rect)
             self.layout.repaint_rect(self.background.rect)
         rects = self.sprites.draw(surface)
+        self.set_eraser(self.background.image)
         rects += self.layout.draw(surface)
         return rects
 
@@ -272,18 +269,20 @@ class ImSlider(object):
         """
         dt = self.clock.tick() / 1000  # Amount of seconds between each loop.
         self.sprites.update(events, dt)
-        self.layout.update(events, dt)
 
         if self.layout.is_animated():
+            self.layout.update(events, dt)
             return  # Let's finish the current animations
 
         if self.arrows[0].pressed_time > self.pressed_repeat_time:
             self.arrows[0].pressed_time = 0
             self.on_previous()
+            self.layout.update(events, dt)
             return  # Left arrow stay pressed
         elif self.arrows[1].pressed_time > self.pressed_repeat_time:
             self.arrows[1].pressed_time = 0
             self.on_next()
+            self.layout.update(events, dt)
             return  # Right arrow stay pressed
 
         for event in events:
@@ -322,6 +321,9 @@ class ImSlider(object):
                     self.on_previous()
                 elif self.arrows[1].visible and event.value == JOYHAT_RIGHT:
                     self.on_next()
+
+        # Update will rebuild sprites images
+        self.layout.update(events, dt)
 
     def update_arrows(self):
         """Update arrows visibility. The visibility is changed only if necessary
