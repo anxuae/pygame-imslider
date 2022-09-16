@@ -268,6 +268,7 @@ class Slide(pygame.sprite.DirtySprite):
         if not parent:
             self._renderer = renderer
             self._selected = 0
+            self._index = 0
             if isinstance(image, str):
                 self._image_path = image
             else:
@@ -285,13 +286,19 @@ class Slide(pygame.sprite.DirtySprite):
         self.animations = []
 
     def __repr__(self):
-        return "Slide(path='{}', clone={})".format(self.image_path, self.parent is not None)
+        return f"Slide(index={self.index}, path='{self.image_path}', clone={self.parent is not None})"
 
     @property
     def renderer(self):
         if self.parent:
             return self.parent.renderer
         return self._renderer
+
+    @property
+    def index(self):
+        if self.parent:
+            return self.parent.index
+        return self._index
 
     @property
     def selected(self):
@@ -350,6 +357,15 @@ class Slide(pygame.sprite.DirtySprite):
             self.renderer.draw_slide(self.image, self)
             if self.visible:
                 self.dirty = 1
+
+    def set_index(self, index):
+        """Set index of the slide among all others.
+
+        :param index: slide index
+        :type index: int
+        """
+        if self._index != int(index):
+            self._index = int(index)
 
     def set_selected(self, state):
         """Set the slide selection state (1 for selected else 0)

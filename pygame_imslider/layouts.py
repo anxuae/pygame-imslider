@@ -25,6 +25,7 @@ class SlidesLayout(pygame.sprite.LayeredDirty):
 
     def add_slide(self, slide):
         self.slides.append(slide)
+        slide.set_index(self.slides.index(slide))
         self.add(slide)
 
     def empty(self):
@@ -38,7 +39,6 @@ class SlidesLayout(pygame.sprite.LayeredDirty):
         slide_width = (width - ((1 + self.per_page) * self.padding)) // self.per_page
         slide_height = height - 2 * self.padding
         pos = self.padding - self.selection * (slide_width + self.padding)
-
         for slide in self.slides:
             slide.set_position(self.rect.x + pos, self.rect.y + self.padding)
             slide.set_size(slide_width, slide_height)
@@ -52,8 +52,9 @@ class SlidesLayout(pygame.sprite.LayeredDirty):
         :param y: position y
         :type y: int
         """
-        self.rect.topleft = (x, y)
-        self.get_clip().topleft = (x + self.padding, y + self.padding)
+        if self.rect.topleft != (int(x), int(y)):
+            self.rect.topleft = (int(x), int(y))
+            self.get_clip().topleft = (int(x) + self.padding, int(y) + self.padding)
 
     def set_size(self, width, height):
         """Set the background size.
@@ -201,6 +202,7 @@ class SlidesLayoutLoop(SlidesLayout):
             step = current_idx - len(sprites) + selected_idx
 
         # Clone slides to complete the sprites list
+        # Clones are not added to slides list, use self.add() method instead of self.add_slide()
         right_hidden = len(sprites[sprites.index(visibles[-1]) + 1:])
         missing = self.per_page - len(visibles) + abs(step) - right_hidden
         count = 0
@@ -248,6 +250,7 @@ class SlidesLayoutLoop(SlidesLayout):
             step = current_idx - selected_idx
 
         # Clone slides to complete the sprites list
+        # Clones are not added to slides list, use self.add() method instead of self.add_slide()
         left_hidden = len(sprites[:sprites.index(visibles[0])])
         missing = abs(step) - left_hidden
         count = 0
@@ -269,16 +272,19 @@ class SlidesLayoutLoop(SlidesLayout):
 
 class SlidesLayoutFade(SlidesLayout):
 
+    def add_slide(self, slide):
+        super(SlidesLayoutFade, self).add_slide(slide)
+        if slide == self.slides[self.selection]:
+            if not slide.visible:
+                slide.visible = 1
+        elif slide.visible:
+            slide.visible = 0
+
     def update_slide_sizes(self):
         for slide in self.slides:
             width, height = self.rect.size
             slide.set_position(self.rect.x + self.padding, self.rect.y + self.padding)
             slide.set_size(width - 2 * self.padding, height - 2 * self.padding)
-            if slide == self.slides[self.selection]:
-                if not slide.visible:
-                    slide.visible = 1
-            elif slide.visible:
-                slide.visible = 0
 
     def go_to_selection_forward(self, duration, center=False):
         current = self.get_visible_slides()[0]

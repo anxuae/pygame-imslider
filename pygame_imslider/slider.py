@@ -236,7 +236,8 @@ class ImSlider(object):
             # Changing the clipping area will force update of all
             # sprites without using "dirty mechanism"
             self.sprites.set_clip(self.background.rect)
-            self.set_eraser(self.background.image)
+
+        self.set_eraser(self.background.image)
 
     def draw(self, surface=None, force=False):
         """Draw the image slider.

@@ -60,6 +60,9 @@ def main(test=False, images_nbr=None, parameters={}, resize=False):
                 PROFILER.disable()
                 exit()
 
+            if event.type == pygame.VIDEORESIZE:
+                slider.set_size(*screen.get_size())
+
         slider.update(events)
 
         rects = slider.draw(screen)

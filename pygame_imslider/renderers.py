@@ -212,7 +212,8 @@ class ImSliderRenderer(object):
         if self.slide_color is not None:
             slide.shape = colorize(shape, self.slide_color)
         else:
-            slide.shape = shape
+            slide.shape = surface.copy()
+            slide.shape.fill((0, 0, 0, 0))
 
         if slide.selected:
             surface.blit(slide.shape_selected, (0, 0))
