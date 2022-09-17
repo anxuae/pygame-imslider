@@ -51,8 +51,8 @@ class ImSlider(object):
     :type callback: function
     """
 
-    def __init__(self, size, stype=STYPE_SLIDE, per_page=1, per_move=0, focus=True,
-                 rewind=False, speed=0.4, renderer=ImSliderRenderer.DEFAULT, callback=None):
+    def __init__(self, size, stype=STYPE_SLIDE, per_page=1, per_move=0, focus=True, rewind=False,
+                 speed=0.4, renderer=ImSliderRenderer.DEFAULT, callback=None):
         self._per_page = per_page
         self._per_move = per_move
         self.eraser = None

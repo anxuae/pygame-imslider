@@ -212,9 +212,19 @@ class ImSliderRenderer(object):
         if self.slide_color is not None:
             slide.shape = colorize(shape, self.slide_color)
         else:
+            # Slide is transparent
             slide.shape = surface.copy()
             slide.shape.fill((0, 0, 0, 0))
 
+        self.draw_slide_state(surface, slide)
+
+    def draw_slide_state(self, surface, slide):
+        """Draw selection around the slide.
+        :param surface: surface background should be drawn in
+        :type surface: :py:class:`pygame.Surface`
+        :param slide: slide to draw
+        :type slide: :py:class:`Slide`
+        """
         surface.fill((0, 0, 0, 0))  # Clear the current slide
         if slide.selected:
             surface.blit(slide.shape_selected, (0, 0))
