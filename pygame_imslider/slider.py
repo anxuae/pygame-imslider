@@ -72,6 +72,7 @@ class ImSlider(object):
         self.renderer = renderer
         self.background = Background(self.renderer)
 
+        self.show_arrows = True
         self.arrows = (Arrow(osp.join(HERE, "left.png"), self.renderer, pygame.K_LEFT),
                        Arrow(osp.join(HERE, "right.png"), self.renderer, pygame.K_RIGHT))
         self.pressed_repeat_time = 0.4
@@ -237,6 +238,17 @@ class ImSlider(object):
             # sprites without using "dirty mechanism"
             self.sprites.set_clip(self.background.rect)
 
+    def set_arrows_visible(self, show):
+        """Display/hide right and left arrows.
+
+        :param show: arrows status
+        :type show: bool
+        """
+        if show != self.show_arrows:
+            self.show_arrows = show
+            for arrow in self.arrows:
+                arrow.visible = int(show)
+
     def draw(self, surface=None, force=False):
         """Draw the image slider.
 
@@ -341,6 +353,9 @@ class ImSlider(object):
         """Update arrows visibility. The visibility is changed only if necessary
         to avoid unwelcome surface update.
         """
+        if not self.show_arrows:
+            return
+
         if len(self.layout.slides) == 1\
                 or (len(self.layout.slides) <= self.per_page and self.per_move >= self.per_page):
             # Only one page

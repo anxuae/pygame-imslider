@@ -219,6 +219,9 @@ Several information can be retrieved from the slider:
 
     # Set the current index.
     slider.set_index(2)
+    
+    # Hide left and right arrows
+    slider.set_arrows_visible(False)
 
 
 Run examples
