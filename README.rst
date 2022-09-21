@@ -192,8 +192,8 @@ override any of the following methods:
 - **draw_arrow_state(surface, arrow)**: Draw arrow state.
 - **draw_dot(surface, dot)**: Draw a dot.
 - **draw_dot_state(surface, dot)**: Draw page-dot state
-- **draw_slide_state(surface, slide)**: Draw slide state.
 - **draw_slide(surface, slide)**: Draw a slide.
+- **draw_slide_state(surface, slide)**: Draw slide state.
 - **draw_background(surface)**: Draw background.
 
 Getting/Setting data

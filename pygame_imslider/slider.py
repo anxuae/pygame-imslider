@@ -390,6 +390,9 @@ class ImSlider(object):
     def on_previous(self):
         """Go to previous slide.
         """
+        if self.layout.is_animated():
+            return  # Let's finish the current animations
+
         if self.stype == STYPE_LOOP or self.rewind:
             # Loop, don't check limites
             self.layout.set_selection(step=-self.per_move)
@@ -411,6 +414,9 @@ class ImSlider(object):
     def on_next(self):
         """Go to next slide.
         """
+        if self.layout.is_animated():
+            return  # Let's finish the current animations
+
         if self.stype == STYPE_LOOP or self.rewind:
             # Loop, don't check limites
             self.layout.set_selection(step=self.per_move)
