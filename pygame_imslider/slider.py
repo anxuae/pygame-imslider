@@ -31,17 +31,17 @@ class ImSlider(object):
     :type size: tuple
     :param stype: determine a slider type
     :type stype: str
-    :param per_page: determine how many slides should be displayed per page. If
-                     stype=STYPE_FADE, this option is ignored.
+    :param per_page: determine how many slides should be displayed per page.
+                     Ignored if stype=STYPE_FADE.
     :type per_page: int
     :param per_move: determine how many slides should be moved when a slider goes
-                     to next or perv. If stype=STYPE_FADE, this option is ignored.
+                     to next or perv. Ignored if stype=STYPE_FADE.
     :type per_move: int
     :param focus: determine which slide should be focused if there are multiple
                   slides in a page. A string "center" is acceptable for centering slides.
     :type focus: bool or str
     :param rewind: whether to rewind a slider before the first slide or after the
-                   last one. If stype=STYPE_LOOP, this option is ignored.
+                   last one. Ignored if stype=STYPE_LOOP.
     :type rewind: bool
     :param speed: transition duration in seconds.
     :type speed: int
