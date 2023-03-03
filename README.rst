@@ -87,14 +87,14 @@ in the following example :
 The slider has the following optional parameters:
 
 - **stype**: determine a slider type: STYPE_SLIDE, STYPE_LOOP or STYPE_FADE
-- **per_page**: determine how many slides should be displayed per page. If
-  stype=STYPE_FADE, this option is ignored.
+- **per_page**: determine how many slides should be displayed per page. Ignored if
+  stype=STYPE_FADE.
 - **per_move**: determine how many slides should be moved when a slider goes
-  to next or perv. If stype=STYPE_FADE, this option is ignored.
+  to next or perv. Ignored if stype=STYPE_FADE.
 - **focus**: determine which slide should be focused if there are multiple
   slides in a page. A string "center" is acceptable for centering slides.
 - **rewind**: whether to rewind a slider before the first slide or after the
-  last one. If stype=STYPE_LOOP, this option is ignored.
+  last one. Ignored if stype=STYPE_LOOP.
 - **speed**: transition duration in seconds.
 - **renderer**: a ImSliderRenderer to customize colors of the slider
 - **callback**: callback called each time the selection is changed.
@@ -171,11 +171,11 @@ A custom ``ImSliderRenderer`` can be built using following constructor :
 .. code-block:: python
 
     renderer = ImSliderRenderer(
-        # RGB tuple for arrow color (one per state: released, pressed).
+        # RGB tuple for arrow color (one tuple per state: released, pressed).
         ((255, 255, 255), (54, 54, 54)),
-        # RGB tuple for page-dot color (one tuple per state).
+        # RGB tuple for page-dot color (one tuple per state: released, pressed).
         ((120, 120, 120), (54, 54, 54)),
-        # RGB tuple for sldie color.
+        # RGB tuple for slide color.
         (242, 195, 195),
         # RGB tuple for selected image color.
         (245, 95, 76),
@@ -212,7 +212,7 @@ Several information can be retrieved from the slider:
     slider.get_rect()
 
     # Get the current pygame image (optionally resized).
-    slider.get_image()
+    slider.get_image(resized=False)
 
     # Get the current index.
     slider.get_index()
