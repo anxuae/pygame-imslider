@@ -14,7 +14,7 @@ import pygame_imslider  # nopep8 : import shall be done after adding setup to pa
 
 def main():
     setup(
-        name=pygame_imslider.__name__,
+        name='pygame-imslider',
         version=pygame_imslider.__version__,
         description=pygame_imslider.__doc__,
         long_description=open(osp.join(HERE, 'README.rst'), encoding='utf-8').read(),
