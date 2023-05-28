@@ -84,7 +84,7 @@ class ImSlider(object):
 
         self.set_size(*size)
 
-        # On Raspberry Pi, the time to update dirty sprites is long (120-180ms
+        # On Raspberry Pi, the time to update dirty sprites is long (200-300ms
         # tested), increasing the treshold permits to avoid blitting full screen
         # at each draw() call.
         self.sprites.set_timing_threshold(600)
@@ -283,6 +283,8 @@ class ImSlider(object):
         dt = self.clock.tick() / 1000  # Amount of seconds between each loop.
         update_eraser = self.background.image is None
         self.sprites.update(events, dt)
+        # Synchronize update method between groups
+        self.layout._use_update = self.sprites._use_update
 
         if self.layout.is_animated():
             self.layout.update(events, dt)

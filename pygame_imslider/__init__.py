@@ -5,4 +5,4 @@
 from .slider import ImSlider, STYPE_SLIDE, STYPE_LOOP, STYPE_FADE
 from .renderers import ImSliderRenderer
 
-__version__ = '1.0.1'
+__version__ = '1.0.2'
